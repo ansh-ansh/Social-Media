@@ -1,2 +1,2 @@
-# Social-Media
-AnonBoard: A Minimalist Anonymous Social Network
+# Social Media Project
+An anonymous social media app using Flask and Python.
