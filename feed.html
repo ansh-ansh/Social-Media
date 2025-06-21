@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content = "width=device-width, initial-scale=1.0">
+    <title>AnonBoard | Home</title>
+
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+        }
+        .post-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05)
+
+        }
+        .post-image  {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+
+        }
+        .post-meta {
+            font-size: 0.85rem;
+            color: #888;
+
+        }
+        .navbar-brand {
+            font-weight: bold;
+
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+
+        }
+        .feed-tabs {
+            background: white;
+            border-radius: 8px;
+            padding: 10px 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        .no-posts {
+            text-align: center;
+            color: gray;
+            margin-top: 50px;
+        }
+        .feed-header {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+        <div class = "container">
+            <a class="navbar-brand" href="/">AnonBoard</a>
+            <ul class="nav nav-tabs ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/text">💬 Text Only</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/photos">📸 Image Feed</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/post">➕ Create</a>
+                </li>
+            </ul>
+        </div>
+    </nav>  
+    
+    <div class="container feed-header">
+        <h3>>🔄 All Anonymous Posts</h3>
+    </div>
+
+    <div class="container">
+        {% if posts and posts|length > 0 %}
+            {% for post in posts %}
+                <div class="post-card">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ post[1] }}</strong>
+                        <span class="post-meta">{{post[4] }}</span>
+                    </div>
+                    {% if post[2] %}
+                        <p class="mt-2">{{post [2]}}</p>
+                    {% endif %}
+                    
+                    {% if post[3] %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ post[3]) }}" alt="Post image" class="post-image">
+                    {% endif %}
+
+
+                </div>
+            { % endfor %}
+        {% else %}
+            <div class="text-center text-muted mt-5">
+                <p>No posts yet. Be the first to <a href="/post">say something</a>!</p>
+            </div> 
+        {% endif %}
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        
+                         
+            
+
+
+    
+</body>
+
+
+
+</html>
