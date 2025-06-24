@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AnonBoard | Threads</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Base styles for dark mode */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #18191a;
+            color: #e4e6eb;
+            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition for theme change */
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: #242526;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2); /* Added subtle shadow */
+            z-index: 1000; /* Ensure sidebar is on top */
+        }
+
+        .sidebar h2 {
+            color: white; /* Explicitly white for consistency */
+            margin-bottom: 30px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            text-decoration: none;
+            color: #b0b3b8;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: background-color 0.2s ease, color 0.2s ease; /* Smooth transition for hover/active */
+        }
+
+        .sidebar a.active,
+        .sidebar a:hover {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        /* Main content area */
+        .content {
+            margin-left: 250px; /* Offset for the fixed sidebar */
+            padding: 20px;
+            padding-bottom: 50px; /* Added padding-bottom to ensure content doesn't get cut off at the bottom */
+            flex-grow: 1; /* Allow content to take remaining space if body is flex */
+        }
+
+        /* Main controls for header (Create New Thread, Theme Toggle) */
+        .main-controls { /* Renamed from .feed-header to match feed.html for consistency */
+            display: flex;
+            justify-content: space-between; /* Push Create Post left and Theme Toggle right */
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+            gap: 15px; /* Spacing between items */
+        }
+
+        /* Create New Thread Button Styling */
+        .thread-post-button {
+            padding: 10px 20px;
+            border-radius: 25px; /* Pill shape for "circular" look */
+            font-size: 1.1em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            /* Blue color for button */
+            background-color: #0d6efd; /* Bootstrap primary blue */
+            border: none;
+            color: white;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        .thread-post-button:hover {
+            background-color: #0b5ed7; /* Darker blue on hover */
+        }
+        body.light-mode .thread-post-button {
+            background-color: #0d6efd; /* Keep blue in light mode */
+            color: white;
+        }
+        body.light-mode .thread-post-button:hover {
+            background-color: #0b5ed7;
+        }
+
+
+        /* Post card styling (main content blocks) */
+        .post-card {
+            background: #242526;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #e4e6eb;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+        }
+
+        .post-card .post-header {
+            display: flex;
+            justify-content: space-between; /* Pushes sigma buttons to the right */
+            align-items: center;
+            margin-bottom: 10px; /* Space between header and post content */
+            flex-wrap: wrap; /* Allow header content to wrap */
+            gap: 10px; /* Spacing for wrapping elements */
+        }
+        .post-card .post-header strong {
+            font-size: 1.1em; /* Slightly larger for emphasis */
+        }
+        .post-card p {
+            line-height: 1.6; /* Better readability */
+        }
+
+        /* Compact view specific styles for post-card */
+        .post-card.compact-view {
+            padding: 10px 15px; /* Smaller padding */
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            overflow: hidden; /* Important for text-overflow to work */
+        }
+        .post-card.compact-view .post-header {
+            margin-bottom: 0;
+            display: contents; /* Makes children participate in flex layout of parent .compact-view */
+        }
+        .post-card.compact-view .post-header div {
+            flex-shrink: 1; /* Allow the text div to shrink */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0; /* Necessary for overflow to work in flex items */
+        }
+        .post-card.compact-view .post-header strong {
+            font-size: 0.95em;
+            margin-right: auto; /* Push content to the left */
+        }
+        .post-card.compact-view p {
+            display: none; /* Hide the main paragraph text in compact view to keep it truly compact */
+        }
+        .post-card.compact-view .sigma-button-container {
+            margin-top: 0;
+            flex-shrink: 0; /* Prevent buttons from shrinking */
+        }
+        .post-card.compact-view .sigma-btn {
+            padding: .25rem .5rem; /* Smaller buttons */
+            font-size: .75rem;
+        }
+        .post-card.compact-view .comment-section {
+            display: none; /* Hide comments in compact view */
+        }
+
+        /* Theme toggle button group */
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-toggle {
+            background-color: transparent;
+            border: 1px solid #e4e6eb;
+            color: #e4e6eb;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .btn-toggle.active {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+        }
+
+        /* Sidebar Profile Dropdown Styles (always dark to match sidebar) */
+        .dropdown-menu-dark {
+            background-color: #3a3b3c; /* Base dark background for dropdown menus */
+            color: white;
+            border: 1px solid #4a4d50; /* Added a subtle border */
+        }
+
+        .dropdown-item-text {
+            padding: 8px 20px;
+            color: #e4e6eb; /* Base light text color for dropdown items */
+            background-color: transparent;
+            border: none;
+            white-space: nowrap; /* Prevent wrapping for profile info */
+        }
+
+        /* Light mode button specific styles */
+        .btn-light-mode {
+            background-color: transparent;
+            border: 1px solid #fff; /* Border visible in dark mode */
+            color: #fff; /* Text visible in dark mode */
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Search Bar Styling */
+        .search-bar-wrapper {
+            background-color: #2e3032;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .search-bar-wrapper .search-icon {
+            color: #b0b3b8;
+            margin-right: 10px;
+        }
+
+        .search-bar-wrapper .search-input-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .search-bar-wrapper .search-input {
+            background-color: transparent;
+            border: none;
+            color: #e4e6eb;
+            flex-grow: 1;
+            padding: 0;
+            outline: none;
+            min-width: 0; /* Added min-width: 0 to prevent flex item from overflowing */
+        }
+
+        .search-bar-wrapper .search-input::placeholder {
+            color: #b0b3b8;
+        }
+
+        .search-bar-wrapper .search-tag {
+            background-color: #556c7f;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 10px;
+            white-space: nowrap;
+            flex-shrink: 0; /* Prevent tag from shrinking */
+        }
+
+        .search-bar-wrapper .search-tag .remove-tag {
+            cursor: pointer;
+            color: #e4e6eb;
+            font-size: 0.8em;
+            margin-left: 5px; /* Ensure spacing if gap is not universally supported or overridden */
+        }
+
+        /* Filter/View Dropdowns Styling */
+        .filter-view-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Allow dropdowns to wrap on smaller screens */
+        }
+
+        .filter-view-controls .dropdown-toggle {
+            background-color: #2e3032;
+            border: 1px solid #4a4d50;
+            color: #e4e6eb;
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .filter-view-controls .dropdown-toggle:hover {
+            background-color: #3a3b3c;
+            border-color: #5a5d60;
+        }
+
+        .filter-view-controls .dropdown-menu {
+            background-color: #2e3032;
+            border: 1px solid #4a4d50;
+            border-radius: 5px;
+        }
+
+        .filter-view-controls .dropdown-item {
+            color: #e4e6eb;
+            padding: 8px 15px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .filter-view-controls .dropdown-item:hover,
+        .filter-view-controls .dropdown-item.active {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        /* Right Panel (Your Profile) Styling */
+        .right-panel {
+            background-color: #242526; /* Dark mode background */
+            border: 1px solid #4a4d50; /* Border for dark mode */
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px; /* Space from content above */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .right-panel h6 {
+            color: white; /* Ensure headings are white in dark mode */
+            margin-bottom: 15px;
+        }
+        .right-panel p, .right-panel ul {
+            color: #e4e6eb; /* Ensure text is light in dark mode */
+        }
+        .right-panel ul {
+            list-style: none; /* Remove default list style */
+            padding-left: 0;
+            margin-bottom: 0; /* Remove default ul margin */
+        }
+        .right-panel ul li {
+            margin-bottom: 5px;
+        }
+        .right-panel ul li:last-child {
+            margin-bottom: 0; /* No margin on last item */
+        }
+
+        /* LIGHT MODE OVERRIDES */
+        body.light-mode {
+            background-color: #f0f2f5;
+            color: #000;
+        }
+
+        body.light-mode .post-card {
+            background: white;
+            color: black;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Lighter shadow for light mode */
+        }
+
+        body.light-mode .btn-toggle {
+            color: black;
+            border-color: black;
+        }
+
+        body.light-mode .btn-light-mode {
+            border: 1px solid #000; /* Border visible in light mode */
+            color: #000; /* Text visible in light mode */
+        }
+
+        /* General dropdowns (like Sort/View) in light mode */
+        body.light-mode .filter-view-controls .dropdown-menu {
+            background-color: white;
+            color: black;
+            border-color: #ccc;
+        }
+        body.light-mode .filter-view-controls .dropdown-item {
+            color: black;
+        }
+        body.light-mode .filter-view-controls .dropdown-item:hover,
+        body.light-mode .filter-view-controls .dropdown-item.active {
+            background-color: #e9ecef;
+            color: black; /* Text black on hover */
+        }
+
+        /* Sidebar always dark with white text (explicitly handled) */
+        body.light-mode .sidebar {
+            background-color: #1a1a1a;
+        }
+
+        body.light-mode .sidebar h2,
+        body.light-mode .sidebar a,
+        body.light-mode .sidebar .dropdown-toggle {
+            color: white !important; /* Use !important to override Bootstrap's potential rules */
+        }
+
+        /* Specific rules for the profile dropdown WITHIN the sidebar in light mode */
+        body.light-mode .sidebar .dropdown-menu-dark {
+            background-color: #3a3b3c; /* Keep dark background */
+            border-color: #4a4d50; /* Keep dark border */
+        }
+        body.light-mode .sidebar .dropdown-menu-dark .dropdown-item-text {
+            color: white !important; /* Keep text white */
+            background-color: transparent !important; /* Ensure no white box */
+            border: none !important; /* Ensure no border */
+        }
+        body.light-mode .sidebar .dropdown-menu-dark .dropdown-item-text:hover {
+            color: #d0d3d8 !important; /* Slightly dimmed white on hover, or keep white */
+            background-color: #4a4d50 !important; /* Subtle background on hover */
+        }
+
+
+        body.light-mode .sidebar a:hover,
+        body.light-mode .sidebar a.active {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        /* Light mode for search bar */
+        body.light-mode .search-bar-wrapper {
+            background-color: #e0e2e5;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .search-bar-wrapper .search-icon {
+            color: #555;
+        }
+
+        body.light-mode .search-bar-wrapper .search-input {
+            color: #000;
+        }
+
+        body.light-mode .search-bar-wrapper .search-input::placeholder {
+            color: #888;
+        }
+
+        body.light-mode .search-bar-wrapper .search-tag {
+            background-color: #a0c0e0;
+            color: #000;
+        }
+
+        body.light-mode .search-bar-wrapper .search-tag .remove-tag {
+            color: #333;
+        }
+
+        /* Light mode for Right Panel */
+        body.light-mode .right-panel {
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        body.light-mode .right-panel h6 {
+            color: black;
+        }
+        body.light-mode .right-panel p, body.light-mode .right-panel ul {
+            color: #333;
+        }
+
+
+        /* Media queries for responsiveness */
+        @media (max-width: 991px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative; /* Make it flow with content */
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+            .content {
+                margin-left: 0; /* Remove left margin on smaller screens */
+                padding-top: 10px; /* Add some space if sidebar is above */
+            }
+            .sidebar .text-center {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding-bottom: 10px;
+            }
+            .sidebar img {
+                height: 100px !important; /* Smaller logo on mobile */
+                background-color: transparent; /* Ensure no white box from the img itself */
+                border-radius: 50%; /* Make it round if it's a square image with transparent background */
+                object-fit: cover; /* Ensures image covers the area without distortion */
+            }
+            .sidebar a {
+                justify-content: center; /* Center sidebar links */
+            }
+            .sidebar .dropdown {
+                width: calc(100% - 40px); /* Adjust width for padding */
+                margin-left: 20px; /* Center dropdown */
+                margin-right: 20px;
+            }
+            .sidebar h2 {
+                display: none; /* Hide main title on small screens if space is tight */
+            }
+            .main-controls {
+                flex-direction: column; /* Stack main controls */
+                align-items: stretch; /* Stretch items to full width */
+            }
+            .search-bar-wrapper, .toggle-group {
+                width: 100%; /* Make them full width */
+            }
+            .toggle-group {
+                justify-content: center; /* Center toggle buttons if they stack */
+            }
+            .right-panel {
+                margin-top: 15px; /* Adjust margin for mobile */
+            }
+        }
+
+        @media (max-width: 767px) {
+            .filter-view-controls {
+                flex-direction: column; /* Stack filter/view dropdowns */
+            }
+            .filter-view-controls .dropdown-toggle {
+                width: 100%; /* Full width dropdown buttons */
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex"> <!-- This div wraps the entire main layout -->
+        <!-- Sidebar -->
+        <div class="sidebar d-flex flex-column">
+            <div class="text-center mb-3">
+                <!-- Replaced expired image URL with a placeholder -->
+                <img src="https://sdmntprnortheu.oaiusercontent.com/files/00000000-ad88-61f4-b9e0-b14891a6e0ed/raw?se=2025-06-24T17%3A59%3A06Z&sp=r&sv=2024-08-04&sr=b&scid=f3ec16e2-2ffd-5e4c-94b8-05e03cfe7ec2&skoid=c156db82-7a33-468f-9cdd-06af263ceec8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-06-24T16%3A04%3A46Z&ske=2025-06-25T16%3A04%3A46Z&sks=b&skv=2024-08-04&sig=n5hQAw7cDk4hmCmjXJEWdsGn1fst6IvP9DD27hbgktU%3D" alt="AnonBoard Logo" style="height: 170px; margin-bottom: 1px;" class="img-fluid" />
+            </div>
+            <!-- Navigation links -->
+            <a href="{{ url_for('feed') }}" class="">🏠 Home</a>
+            <a href="{{ url_for('text_discussions') }}" class="active<ul">💬 Thread Discussions</a>
+            <a href="/photos">🖼️ Image Feed</a> <!-- Assuming /photos route exists -->
+
+            <div class="dropdown mt-4 w-100">
+                <button class="btn btn-outline-light dropdown-toggle w-100" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    👤 Profile
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="profileDropdown">
+                    <li><span class="dropdown-item-text"><strong>Username:</strong> Anon{{ '%04d' % (anon_id | int) }}</span></li>
+                    <li><span class="dropdown-item-text"><strong>Joined:</strong> {{ join_date }}</span></li>
+                    <li><span class="dropdown-item-text"><strong>Sigma:</strong> {{ sigma_score }}</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content">
+            <div class="container-fluid">
+                <div class="main-controls">
+                    <button class="thread-post-button" onclick="window.location.href='{{ url_for('create_thread_post') }}'">
+                        <i class="fas fa-plus"></i> Create New Thread
+                    </button>
+                    <div class="toggle-group">
+                        <button class="btn btn-light-mode" id="themeToggle">☀️ Light Mode</button>
+                    </div>
+                </div>
+
+                <div class="search-bar-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <div class="search-input-container">
+                        <input
+                            class="search-input"
+                            type="search"
+                            placeholder="Search in Threads"
+                            id="mainSearchInput"
+                            value="{{ search_query }}"
+                        />
+                    </div>
+                </div>
+
+                <div class="filter-view-controls">
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-sort"></i> Sort: {{ sort.capitalize() }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                            <li><a class="dropdown-item {% if sort == 'best' %}active{% endif %}" href="{{ url_for('text_discussions', sort='best', view=view, q=search_query) }}" data-sort="best">Best (Most Comments)</a></li>
+                            <li><a class="dropdown-item {% if sort == 'hottest' %}active{% endif %}" href="{{ url_for('text_discussions', sort='hottest', view=view, q=search_query) }}" data-sort="hottest">Hot (Most Votes)</a></li>
+                            <li><a class="dropdown-item {% if sort == 'latest' %}active{% endif %}" href="{{ url_for('text_discussions', sort='latest', view=view, q=search_query) }}" data-sort="latest">New (Latest Posts)</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="viewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-th-large"></i> View: {{ view.capitalize() }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="viewDropdown">
+                            <li><a class="dropdown-item {% if view == 'card' %}active{% endif %}" href="{{ url_for('text_discussions', sort=sort, view='card', q=search_query) }}" data-view="card">Card</a></li>
+                            <li><a class="dropdown-item {% if view == 'compact' %}active{% endif %}" href="{{ url_for('text_discussions', sort=sort, view='compact', q=search_query) }}" data-view="compact">Compact</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        {% if posts and posts|length > 0 %}
+                            {% for post in posts %}
+                                <div class="post-card {% if view == 'compact' %}compact-view{% endif %}">
+                                    <div class="post-header">
+                                        <div><strong>{{ post[1] }}</strong> • anon{{ '%04d' % (post[6] | int) }}</div> <!-- Display original_poster_anon_id -->
+                                        <div class="sigma-button-container">
+                                            <form action="{{ url_for('sigma_post', post_id=post[0], sort=sort, view=view, q=search_query) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="sigma-btn">💪 Sigma {{ post[5] or 0 }}</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {% if post[2] %} <!-- Content is post[2] -->
+                                        <p class="mt-2">{{ post[2] }}</p>
+                                    {% endif %}
+                                    <div class="comment-section">
+                                        <h6>💬 Comments</h6>
+                                        {% if post[7] %} <!-- Comments list is post[7] now -->
+                                            {% for comment in post[7] %}
+                                                <div class="comment-box">
+                                                    <strong>anon{{ '%04d' % (comment[1] | int) }}:</strong> <span>{{ comment[2] }}</span>
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="text-muted small">No comments yet.</p>
+                                        {% endif %}
+                                        <form action="{{ url_for('comment_thread_post', post_id=post[0], sort=sort, view=view, q=search_query) }}" method="POST" class="d-flex mt-2">
+                                            <input type="text" name="comment" class="form-control me-2" placeholder="Reply as anon..." required>
+                                            <button class="btn btn-primary btn-sm">Reply</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center mt-5">No threads yet. Be the first to start a discussion!</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="right-panel">
+                            <h6>Your Profile (Anonymous)</h6>
+                            <p>🧑 Username: anon{{ '%04d' % (anon_id | int) }}</p>
+                            <p>💪 Total Sigma: {{ sigma_score }}</p>
+                            <p>⏰ Joined: {{ join_date }}</p>
+                            <hr>`
+                            <h6>Activity Summary:</h6>
+                            <p>📝 Threads Created: {{ threads_created }}</p>
+                            <p>💬 Comments Made: {{ comments_made }}</p>
+                            <p>⬆️ Average Upvotes per Thread: {{ average_upvotes }}</p>
+                            <hr>
+                            <h6>💡 Daily Insight:</h6>
+                            <p class="small fst-italic">"The greatest glory in living lies not in never falling, but in rising every time we fall." - Nelson Mandela</p>
+                            <hr>
+                            <h6>Tips:</h6>
+                            <ul>
+                                <li>Use ✨ Markdown</li>
+                                <li>Stay anonymous</li>
+                                <li>Post whatever. Literally.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggleBtn = document.getElementById("themeToggle");
+            
+            // Function to set theme and update button text
+            function applyTheme(isLightMode) {
+                if (isLightMode) {
+                    document.body.classList.add("light-mode");
+                    themeToggleBtn.innerText = "🌙 Dark Mode"; // Show option to switch to Dark
+                } else {
+                    document.body.classList.remove("light-mode");
+                    themeToggleBtn.innerText = "☀️ Light Mode"; // Show option to switch to Light
+                }
+            }
+
+            // Apply theme on load based on localStorage or default to dark
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "light") {
+                applyTheme(true);
+            } else {
+                applyTheme(false); // Default to dark if no preference or 'dark' saved
+            }
+
+            // Event listener for theme toggle button
+            themeToggleBtn.addEventListener("click", () => {
+                const isLight = document.body.classList.contains("light-mode");
+                applyTheme(!isLight); // Toggle theme
+                localStorage.setItem("theme", isLight ? "dark" : "light"); // Save new preference
+            });
+
+
+            // --- Search Bar JavaScript ---
+            const mainSearchInput = document.getElementById('mainSearchInput');
+            const searchInputContainer = document.querySelector('.search-input-container');
+
+            function updateAndGoToUrl() {
+                const currentUrl = new URL(window.location.href);
+                const params = new URLSearchParams(currentUrl.search);
+
+                const searchValue = mainSearchInput.value.trim();
+
+                if (searchValue) {
+                    params.set('q', searchValue);
+                } else {
+                    params.delete('q');
+                }
+
+                // Get current sort and view from URL or default
+                const currentSort = params.get('sort') || 'best';
+                const currentView = params.get('view') || 'card';
+
+                // Set them in params just in case they were removed by user interaction
+                params.set('sort', currentSort);
+                params.set('view', currentView);
+
+                currentUrl.search = params.toString();
+                window.location.href = currentUrl.toString();
+            }
+
+            mainSearchInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    updateAndGoToUrl();
+                }
+            });
+
+            // Initialize search bar based on URL param
+            const urlParams = new URLSearchParams(window.location.search); 
+
+            const searchQuery = urlParams.get('q');
+
+            if (searchQuery) {
+                const searchTag = document.createElement('span');
+                searchTag.classList.add('search-tag');
+                searchTag.innerHTML = `
+                    <img src="https://img.icons8.com/color/16/000000/reddit--v1.png" alt="AnonBoard Icon" style="height: 16px; width: 16px;">
+                    ${searchQuery}
+                    <i class="fas fa-times remove-tag" style="margin-left: 5px;"></i>
+                `;
+                searchInputContainer.prepend(searchTag);
+                mainSearchInput.placeholder = '';
+                mainSearchInput.style.width = 'fit-content';
+                mainSearchInput.style.flexGrow = '0';
+
+                const removeTagButton = searchTag.querySelector('.remove-tag');
+                if (removeTagButton) {
+                    removeTagButton.addEventListener('click', () => {
+                        searchTag.remove();
+                        mainSearchInput.value = '';
+                        mainSearchInput.placeholder = 'Search in AnonBoard';
+                        mainSearchInput.style.width = '';
+                        mainSearchInput.style.flexGrow = '1';
+                        updateAndGoToUrl();
+                    });
+                }
+            }
+
+            // --- Filter/View Dropdowns JavaScript ---
+            const sortDropdownItems = document.querySelectorAll('#sortDropdown + .dropdown-menu .dropdown-item');
+            const viewDropdownItems = document.querySelectorAll('#viewDropdown + .dropdown-menu .dropdown-item');
+
+            sortDropdownItems.forEach(item => {
+                item.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const newSort = this.dataset.sort;
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('sort', newSort);
+                    const currentQ = urlParams.get('q');
+                    if (currentQ) {
+                        currentUrl.searchParams.set('q', currentQ);
+                    } else {
+                        currentUrl.searchParams.delete('q');
+                    }
+                    const currentView = urlParams.get('view');
+                    if (currentView) {
+                        currentUrl.searchParams.set('view', currentView);
+                    } else {
+                        currentUrl.searchParams.delete('view');
+                    }
+                    window.location.href = currentUrl.toString();
+                });
+            });
+
+            viewDropdownItems.forEach(item => {
+                item.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const newView = this.dataset.view;
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('view', newView);
+                    const currentQ = urlParams.get('q');
+                    if (currentQ) {
+                        currentUrl.searchParams.set('q', currentQ);
+                    } else {
+                        currentUrl.searchParams.delete('q');
+                    }
+                    const currentSort = urlParams.get('sort');
+                    if (currentSort) {
+                        currentUrl.searchParams.set('sort', currentSort);
+                    } else {
+                        currentUrl.searchParams.delete('sort');
+                    }
+                    window.location.href = currentUrl.toString();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
