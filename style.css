@@ -1,0 +1,794 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #18191a;
+    color: #e4e6eb;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition for theme change */
+}
+
+/* Base text-muted color for dark mode */
+.text-muted {
+    color: #b0b3b8 !important; /* Ensure it's visible in dark mode */
+}
+
+/* Sidebar styles */
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: #242526;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2); /* Added subtle shadow */
+    z-index: 1000; /* Ensure sidebar is on top */
+}
+
+.sidebar h2 {
+    color: white; /* Explicitly white for consistency */
+    margin-bottom: 30px;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    text-decoration: none;
+    color: #b0b3b8;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    transition: background-color 0.2s ease, color 0.2s ease; /* Smooth transition for hover/active */
+}
+
+.sidebar a.active,
+.sidebar a:hover {
+    background-color: #3a3b3c;
+    color: white;
+}
+
+/* Main content area */
+.content {
+    margin-left: 250px; /* Offset for the fixed sidebar */
+    padding: 20px;
+    padding-bottom: 50px; /* Added padding-bottom to ensure content doesn't get cut off at the bottom */
+    flex-grow: 1; /* Allow content to take remaining space if body is flex */
+}
+
+/* Main controls for header (Create New Thread, Theme Toggle) */
+.main-controls { /* Renamed from .feed-header to match feed.html for consistency */
+    display: flex;
+    justify-content: space-between; /* Push Create Post left and Theme Toggle right */
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+    gap: 15px; /* Spacing between items */
+}
+
+/* Create New Thread Button Styling */
+.thread-post-button {
+    padding: 10px 20px;
+    border-radius: 25px; /* Pill shape for "circular" look */
+    font-size: 1.1em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Blue color for button */
+    background-color: #0d6efd; /* Bootstrap primary blue */
+    border: none;
+    color: white;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+.thread-post-button:hover {
+    background-color: #0b5ed7; /* Darker blue on hover */
+}
+body.light-mode .thread-post-button {
+    background-color: #0d6efd; /* Keep blue in light mode */
+    color: white;
+}
+body.light-mode .thread-post-button:hover {
+    background-color: #0b5ed7;
+}
+
+/* Post card styling (main content blocks) */
+.post-card {
+    background: #242526;
+    border-radius: 10px;
+    padding: 15px; /* Adjusted padding to better fit horizontal votes */
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: #e4e6eb;
+    transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+    display: flex; /* Make it a flex container for votes and content */
+    align-items: flex-start; /* Align items to the top */
+    gap: 15px; /* Space between vote controls and post content */
+}
+
+/* New: Vote controls container */
+.post-card .vote-controls {
+    display: flex;
+    flex-direction: row; /* Horizontal layout for upvote, score, downvote */
+    align-items: center;
+    background-color: #3a3b3c; /* Darker background for the vote block */
+    border-radius: 20px; /* Pill shape for the vote block */
+    padding: 5px 10px; /* Padding inside the vote block */
+    flex-shrink: 0; /* Prevent it from shrinking */
+    gap: 5px; /* Space between elements inside the vote control */
+}
+
+.post-card .vote-controls .vote-btn {
+    background: transparent;
+    border: none;
+    color: #e4e6eb; /* Light color for icons */
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 0; /* Remove default button padding */
+    transition: color 0.2s ease;
+}
+
+.post-card .vote-controls .vote-btn:hover {
+    color: #0d6efd; /* Highlight on hover */
+}
+
+.post-card .vote-controls .vote-btn.upvote.active {
+    color: #28a745; /* Green for active upvote */
+}
+
+.post-card .vote-controls .vote-btn.downvote.active {
+    color: #dc3545; /* Red for active downvote */
+}
+
+.post-card .vote-controls .sigma-score {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #e4e6eb; /* Default score color */
+    padding: 0 5px; /* Space around the score */
+}
+
+/* Container for post title, content, and comments */
+.post-card .post-content-container {
+    flex-grow: 1; /* Allow post content to take remaining space */
+    min-width: 0; /* Crucial for text-overflow to work within flex item */
+}
+
+.post-card .post-header {
+    display: flex;
+    justify-content: space-between; /* Pushes delete button to the right */
+    align-items: center;
+    margin-bottom: 5px; /* Space between header and post content */
+    flex-wrap: wrap; /* Allow header content to wrap */
+    gap: 10px; /* Spacing for wrapping elements */
+}
+.post-card .post-header strong.post-username {
+    font-size: 1.1em; /* Slightly larger for emphasis */
+}
+.post-card .post-content-rendered {
+    line-height: 1.6; /* Better readability */
+}
+
+/* Comments section */
+.comment-section {
+    margin-top: 15px;
+    border-top: 1px solid #3a3b3c;
+    padding-top: 10px;
+}
+
+.comment-section h6 {
+    color: #b0b3b8;
+    margin-bottom: 10px;
+}
+
+.comment-section .comment-box {
+    background-color: #3a3b3c; /* Slightly different background for comments */
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    word-wrap: break-word; /* Ensure long words wrap */
+}
+
+.comment-section .comment-box strong {
+    color: white;
+}
+
+.comment-section .comment-box .comment-content-rendered {
+    color: #e4e6eb;
+    margin-left: 5px; /* Space between username and comment content */
+}
+
+/* Specific styling for the "No comments yet" message in dark mode */
+.comment-section p.text-muted.small {
+    color: #b0b3b8 !important; /* Ensure visibility for "No comments yet." */
+}
+
+
+/* Compact view specific styles for post-card */
+.post-card.compact-view {
+    padding: 10px 15px; /* Smaller padding */
+    align-items: center; /* Center vertically in compact view */
+    gap: 15px;
+    overflow: hidden; /* Important for text-overflow to work */
+}
+.post-card.compact-view .vote-controls {
+    padding: 3px 8px; /* Smaller padding for compact vote controls */
+}
+.post-card.compact-view .vote-controls .vote-btn {
+    font-size: 1em; /* Smaller icons in compact mode */
+}
+.post-card.compact-view .vote-controls .sigma-score {
+    font-size: 0.9em; /* Smaller score in compact mode */
+}
+.post-card.compact-view .post-header {
+    margin-bottom: 0;
+    display: contents; /* Makes children participate in flex layout of parent .compact-view */
+}
+.post-card.compact-view .post-header div {
+    flex-shrink: 1; /* Allow the text div to shrink */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0; /* Necessary for overflow to work in flex items */
+}
+.post-card.compact-view .post-header strong {
+    font-size: 0.95em;
+    margin-right: auto; /* Push content to the left */
+}
+.post-card.compact-view .post-content-rendered {
+    display: none; /* Hide the main paragraph text in compact view to keep it truly compact */
+}
+.post-card.compact-view .comment-section {
+    display: none; /* Hide comments in compact view */
+}
+
+/* Theme toggle button group */
+.toggle-group {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-toggle {
+    background-color: transparent;
+    border: 1px solid #e4e6eb;
+    color: #e4e6eb;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-toggle.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+}
+
+/* Sidebar Profile Dropdown Styles (always dark to match sidebar) */
+.dropdown-menu-dark {
+    background-color: #3a3b3c; /* Base dark background for dropdown menus */
+    color: white;
+    border: 1px solid #4a4d50; /* Added a subtle border */
+}
+
+.dropdown-item-text {
+    padding: 8px 20px;
+    color: #e4e6eb; /* Base light text color for dropdown items */
+    background-color: transparent;
+    border: none;
+    white-space: nowrap; /* Prevent wrapping for profile info */
+}
+
+/* Light mode button specific styles */
+.btn-light-mode {
+    background-color: transparent;
+    border: 1px solid #fff; /* Border visible in dark mode */
+    color: #fff; /* Text visible in dark mode */
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Search Bar Styling */
+.search-bar-wrapper {
+    background-color: #2e3032;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-bar-wrapper .search-icon {
+    color: #b0b3b8;
+    margin-right: 10px;
+}
+
+.search-bar-wrapper .search-input-container {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.search-bar-wrapper .search-input {
+    background-color: transparent;
+    border: none;
+    color: #e4e6eb;
+    flex-grow: 1;
+    padding: 0;
+    outline: none;
+    min-width: 0; /* Added min-width: 0 to prevent flex item from overflowing */
+}
+
+.search-bar-wrapper .search-input::placeholder {
+    color: #b0b3b8;
+}
+
+.search-bar-wrapper .search-tag {
+    background-color: #556c7f;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 10px;
+    white-space: nowrap;
+    flex-shrink: 0; /* Prevent tag from shrinking */
+}
+
+.search-bar-wrapper .search-tag .remove-tag {
+    cursor: pointer;
+    color: #e4e6eb;
+    font-size: 0.8em;
+    margin-left: 5px; /* Ensure spacing if gap is not universally supported or overridden */
+}
+
+/* Filter/View Dropdowns Styling */
+.filter-view-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Allow dropdowns to wrap on smaller screens */
+}
+
+.filter-view-controls .dropdown-toggle {
+    background-color: #2e3032;
+    border: 1px solid #4a4d50;
+    color: #e4e6eb;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.filter-view-controls .dropdown-toggle:hover {
+    background-color: #3a3b3c;
+    border-color: #5a5d60;
+}
+
+.filter-view-controls .dropdown-menu {
+    background-color: #2e3032;
+    border: 1px solid #4a4d50;
+    border-radius: 5px;
+}
+
+.filter-view-controls .dropdown-item {
+    color: #e4e6eb;
+    padding: 8px 15px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.filter-view-controls .dropdown-item:hover,
+.filter-view-controls .dropdown-item.active {
+    background-color: #3a3b3c;
+    color: white;
+}
+
+/* Right Panel (Your Profile) Styling */
+.right-panel {
+    background-color: #242526; /* Dark mode background */
+    border: 1px solid #4a4d50; /* Border for dark mode */
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px; /* Space from content above */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.right-panel h6 {
+    color: white; /* Ensure headings are white in dark mode */
+    margin-bottom: 15px;
+}
+.right-panel p, .right-panel ul {
+    color: #e4e6eb; /* Ensure text is light in dark mode */
+}
+.right-panel ul {
+    list-style: none; /* Remove default list style */
+    padding-left: 0;
+    margin-bottom: 0; /* Remove default ul margin */
+}
+.right-panel ul li {
+    margin-bottom: 5px;
+}
+.right-panel ul li:last-child {
+    margin-bottom: 0; /* No margin on last item */
+}
+
+/* Form Specific Styles for post.html */
+.post-form-card {
+    background: #242526;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: #e4e6eb;
+}
+
+.form-label {
+    color: #e4e6eb;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-control, .form-select {
+    background-color: #3a3b3c;
+    border: 1px solid #4a4d50;
+    color: #e4e6eb;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #3a3b3c;
+    color: #e4e6eb;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-control::placeholder {
+    color: #b0b3b8;
+}
+
+.btn-outline-secondary-dark {
+    background-color: #4a4d50;
+    border: 1px solid #5a5d60;
+    color: #e4e6eb;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-outline-secondary-dark:hover {
+    background-color: #5a5d60;
+    color: #e4e6eb;
+}
+
+.text-editor-toolbar {
+    background-color: #2e3032;
+    border: 1px solid #4a4d50;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.text-editor-toolbar button {
+    background: transparent;
+    border: none;
+    color: #b0b3b8;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.text-editor-toolbar button:hover {
+    background-color: #3a3b3c;
+    color: white;
+}
+
+.text-editor-toolbar span {
+    color: #b0b3b8;
+    margin: 0 5px;
+    display: flex; /* For alignment of items like "Switch to Markdown Editor" */
+    align-items: center;
+}
+
+.text-editor-toolbar .icon-group {
+    display: flex;
+    gap: 2px; /* Tighter spacing for icon groups */
+}
+
+/* Adjustments for the specific layout in the toolbar based on the image */
+.text-editor-toolbar .me-auto { /* For icons that should push others to the right */
+    margin-right: auto !important;
+}
+
+/* Submit buttons container */
+.form-buttons {
+    display: flex;
+    justify-content: flex-end; /* Push buttons to the right */
+    gap: 10px;
+    margin-top: 20px; /* Space above buttons */
+}
+.form-buttons .btn {
+    padding: 10px 25px;
+    border-radius: 20px; /* Pill shape */
+    font-weight: bold;
+}
+.form-buttons .btn-secondary {
+    background-color: #4a4d50;
+    border-color: #4a4d50;
+    color: white;
+}
+.form-buttons .btn-secondary:hover {
+    background-color: #5a5d60;
+    border-color: #5a5d60;
+}
+.form-buttons .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+}
+.form-buttons .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0b5ed7;
+}
+
+/* LIGHT MODE OVERRIDES */
+body.light-mode {
+    background-color: #f0f2f5;
+    color: #000;
+}
+
+body.light-mode .text-muted {
+    color: #6c757d !important; /* Bootstrap's default text-muted in light mode */
+}
+
+body.light-mode .post-card {
+    background: white;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Lighter shadow for light mode */
+}
+
+body.light-mode .post-card .vote-controls {
+    background-color: #e0e2e5; /* Lighter background for vote block in light mode */
+}
+
+body.light-mode .post-card .vote-controls .vote-btn {
+    color: #555; /* Darker color for icons in light mode */
+}
+
+body.light-mode .post-card .vote-controls .vote-btn:hover {
+    color: #0d6efd; /* Blue highlight on hover */
+}
+
+body.light-mode .post-card .vote-controls .sigma-score {
+    color: #000; /* Black score in light mode */
+}
+
+body.light-mode .btn-toggle {
+    color: black;
+    border-color: black;
+}
+
+body.light-mode .btn-light-mode {
+    border: 1px solid #000; /* Border visible in light mode */
+    color: #000; /* Text visible in light mode */
+}
+
+/* General dropdowns (like Sort/View) in light mode */
+body.light-mode .filter-view-controls .dropdown-menu {
+    background-color: white;
+    color: black;
+    border-color: #ccc;
+}
+body.light-mode .filter-view-controls .dropdown-item {
+    color: black;
+}
+body.light-mode .filter-view-controls .dropdown-item:hover,
+body.light-mode .filter-view-controls .dropdown-item.active {
+    background-color: #e9ecef;
+    color: black; /* Text black on hover */
+}
+
+/* Sidebar always dark with white text (explicitly handled) */
+body.light-mode .sidebar {
+    background-color: #1a1a1a;
+}
+
+body.light-mode .sidebar h2,
+body.light-mode .sidebar a,
+body.light-mode .sidebar .dropdown-toggle {
+    color: white !important; /* Use !important to override Bootstrap's potential rules */
+}
+
+/* Specific rules for the profile dropdown WITHIN the sidebar in light mode */
+body.light-mode .sidebar .dropdown-menu-dark {
+    background-color: #3a3b3c; /* Keep dark background */
+    border-color: #4a4d50; /* Keep dark border */
+}
+body.light-mode .sidebar .dropdown-menu-dark .dropdown-item-text {
+    color: white !important; /* Keep text white */
+    background-color: transparent !important; /* Ensure no white box from the img itself */
+    border: none !important; /* Ensure no border */
+}
+body.light-mode .sidebar .dropdown-menu-dark .dropdown-item-text:hover {
+    color: #d0d3d8 !important; /* Slightly dimmed white on hover, or keep white */
+    background-color: #4a4d50 !important; /* Subtle background on hover */
+}
+
+body.light-mode .sidebar a:hover,
+body.light-mode .sidebar a.active {
+    background-color: #3a3b3c;
+    color: white;
+}
+
+/* Light mode for search bar */
+body.light-mode .search-bar-wrapper {
+    background-color: #e0e2e5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .search-bar-wrapper .search-icon {
+    color: #555;
+}
+
+body.light-mode .search-bar-wrapper .search-input {
+    color: #000;
+}
+
+body.light-mode .search-bar-wrapper .search-input::placeholder {
+    color: #888;
+}
+
+body.light-mode .search-bar-wrapper .search-tag {
+    background-color: #a0c0e0;
+    color: #000;
+}
+
+body.light-mode .search-bar-wrapper .search-tag .remove-tag {
+    color: #333;
+}
+
+/* Light mode for Right Panel */
+body.light-mode .right-panel {
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+body.light-mode .right-panel h6 {
+    color: black;
+}
+body.light-mode .right-panel p, body.light-mode .right-panel ul {
+    color: #333;
+}
+
+/* Light mode for Form Specific Styles */
+body.light-mode .post-form-card {
+    background: white;
+    color: black;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .form-label {
+    color: black;
+}
+
+body.light-mode .form-control, body.light-mode .form-select {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: black;
+}
+
+body.light-mode .form-control:focus, body.light-mode .form-select:focus {
+    background-color: #e9ecef;
+    color: black;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+body.light-mode .form-control::placeholder {
+    color: #888;
+}
+
+body.light-mode .btn-outline-secondary-dark {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    color: black;
+}
+
+body.light-mode .btn-outline-secondary-dark:hover {
+    background-color: #d6d9dc;
+    color: black;
+}
+
+body.light-mode .text-editor-toolbar {
+    background-color: #e0e2e5;
+    border-color: #ced4da;
+}
+
+body.light-mode .text-editor-toolbar button {
+    color: #555;
+}
+
+body.light-mode .text-editor-toolbar button:hover {
+    background-color: #d6d9dc;
+    color: black;
+}
+
+body.light-mode .text-editor-toolbar span {
+    color: #555;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 991px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative; /* Make it flow with content */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    .content {
+        margin-left: 0; /* Remove left margin on smaller screens */
+        padding-top: 10px; /* Add some space if sidebar is above */
+    }
+    .sidebar .text-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-bottom: 10px;
+    }
+    .sidebar img {
+        height: 100px !important; /* Smaller logo on mobile */
+        background-color: transparent; /* Ensure no white box from the img itself */
+        border-radius: 50%; /* Make it round if it's a square image with transparent background */
+        object-fit: cover; /* Ensures image covers the area without distortion */
+    }
+    .sidebar a {
+        justify-content: center; /* Center sidebar links */
+    }
+    .sidebar .dropdown {
+        width: calc(100% - 40px); /* Adjust width for padding */
+        margin-left: 20px; /* Center dropdown */
+        margin-right: 20px;
+    }
+    .sidebar h2 {
+        display: none; /* Hide main title on small screens if space is tight */
+    }
+    .main-controls {
+        flex-direction: column; /* Stack main controls */
+        align-items: stretch; /* Stretch items to full width */
+    }
+    .search-bar-wrapper, .toggle-group {
+        width: 100%; /* Make them full width */
+    }
+    .toggle-group {
+        justify-content: center; /* Center toggle buttons if they stack */
+    }
+    .right-panel {
+        margin-top: 15px; /* Adjust margin for mobile */
+    }
+    .post-card {
+        flex-direction: column; /* Stack vote controls and content vertically on small screens */
+        align-items: center; /* Center content when stacked */
+        padding: 15px; /* Keep consistent padding */
+    }
+    .post-card .vote-controls {
+        margin-bottom: 10px; /* Add space below vote controls when stacked */
+    }
+    .post-card .post-content-container {
+        width: 100%; /* Take full width when stacked */
+    }
+}
+
+@media (max-width: 767px) {
+    .filter-view-controls {
+        flex-direction: column; /* Stack filter/view dropdowns */
+    }
+    .filter-view-controls .dropdown-toggle {
+        width: 100%; /* Full width dropdown buttons */
+        justify-content: center;
+    }
+}

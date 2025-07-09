@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AnonBoard | Upload Image</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Specific styles for flair/tag pills */
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .tag-pill {
+            background-color: #0d6efd; /* Blue tag background */
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px; /* Pill shape */
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .tag-pill:hover {
+            background-color: #0b5ed7; /* Darker blue on hover */
+        }
+        .tag-pill .remove-tag {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+        .tag-pill .remove-tag:hover {
+            color: white;
+        }
+
+        /* Container for suggested tags */
+        .suggested-tags-wrapper {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            background-color: #2e3032; /* Darker background for suggested tags */
+            border-radius: 8px;
+            border: 1px solid #4a4d50;
+            display: none; /* Hidden by default */
+        }
+        body.light-mode .suggested-tags-wrapper {
+            background-color: #e0e2e5;
+            border: 1px solid #ccc;
+        }
+
+        .suggested-tags-wrapper .suggested-tag {
+            background-color: #4a4d50; /* Dark background for suggested tag buttons */
+            color: #e4e6eb;
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            font-size: 0.9em;
+            border: none;
+        }
+        .suggested-tags-wrapper .suggested-tag:hover {
+            background-color: #5a5d60;
+            color: white;
+        }
+        body.light-mode .suggested-tags-wrapper .suggested-tag {
+            background-color: #ced4da;
+            color: black;
+        }
+        body.light-mode .suggested-tags-wrapper .suggested-tag:hover {
+            background-color: #adb5bd;
+            color: black;
+        }
+
+        /* Basic styling for flash messages */
+        .flash-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            color: white;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            transform: translateY(-20px);
+            animation: slideIn 0.5s forwards, fadeOut 3s forwards 2s; /* Slide in, then fade out after 2s delay */
+        }
+
+        .flash-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .flash-message.success { background-color: #28a745; } /* Green */
+        .flash-message.danger { background-color: #dc3545; } /* Red */
+        .flash-message.warning { background-color: #ffc107; color: #343a40; } /* Yellow */
+        .flash-message.info { background-color: #17a2b8; } /* Blue-ish */
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* General form card styling (applied to both thread and upload forms) */
+        .post-form-card { /* Renamed for general use, but can be specific like .upload-form-card if preferred */
+            background-color: #212529; /* Dark background */
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            color: #f8f9fa; /* Light text */
+            margin-bottom: 30px;
+        }
+
+        body.light-mode .post-form-card {
+            background-color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            color: #343a40;
+        }
+
+        .form-label {
+            font-weight: bold;
+            color: #f8f9fa;
+        }
+        body.light-mode .form-label {
+            color: #343a40;
+        }
+
+        .form-control {
+            background-color: #343a40;
+            color: #f8f9fa;
+            border: 1px solid #4a4d50;
+        }
+        body.light-mode .form-control {
+            background-color: #ffffff;
+            color: #343a40;
+            border: 1px solid #ced4da;
+        }
+        .form-control::placeholder {
+            color: #adb5bd;
+        }
+        body.light-mode .form-control::placeholder {
+            color: #6c757d;
+        }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5c636a;
+            border-color: #565e64;
+        }
+
+        /* File input specific styling */
+        .form-control[type="file"] {
+            padding: 0.375rem 0.75rem; /* Adjust padding for file input */
+            height: auto; /* Allow height to adjust for file input */
+        }
+        .form-control[type="file"]::file-selector-button {
+            background-color: #4a4d50;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            margin-right: 1rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        body.light-mode .form-control[type="file"]::file-selector-button {
+            background-color: #e9ecef;
+            color: #343a40;
+        }
+        .form-control[type="file"]::file-selector-button:hover {
+            background-color: #5a5d60;
+        }
+        body.light-mode .form-control[type="file"]::file-selector-button:hover {
+            background-color: #ced4da;
+        }
+
+
+        .form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <div class="sidebar d-flex flex-column">
+            <div class="text-center mb-3">
+                <img src="{{ url_for('static', filename='templates/eec78dfd-22c3-4bc8-92b8-226e6a3329a4.png') }}" alt="AnonBoard Logo" style="height: 170px; margin-bottom: 1px;" class="img-fluid" />
+            </div>
+            <a href="{{ url_for('feed') }}" class="">🏠 Home</a>
+            <a href="{{ url_for('text_discussions') }}" class="">💬 Thread Discussions</a>
+            <a href="{{ url_for('photos') }}" class="active">🖼️ Image Feed</a> {# Set 'active' for Image Feed #}
+
+            <div class="dropdown mt-4 w-100">
+                <button class="btn btn-outline-light dropdown-toggle w-100" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    👤 Profile
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="profileDropdown">
+                    <li><span class="dropdown-item-text"><strong>Username:</strong> Anon{{ '%04d' % (anon_id | int) }}</span></li>
+                    <li><span class="dropdown-item-text"><strong>Joined:</strong> {{ join_date }}</span></li>
+                    <li><span class="dropdown-item-text"><strong>Sigma:</strong> {{ sigma_score }}</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="container-fluid">
+                <div class="main-controls">
+                    <button class="thread-post-button" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </button>
+                    <div class="toggle-group">
+                        <button class="btn btn-light-mode" id="themeToggle">☀️ Light Mode</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8 offset-lg-2"> 
+                        <div class="post-form-card"> {# Reusing post-form-card class for consistent styling #}
+                            {# --- IMPORTANT CHANGE HERE: Corrected the form action --- #}
+                            <form method="POST" action="{{ url_for('upload_image') }}" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <div class="mb-3">
+                                    <label for="image_file" class="form-label">Image File<span style="color: red;">*</span></label>
+                                    <input type="file" class="form-control" id="image_file" name="image_file" accept="image/*" required>
+                                    <small class="form-text text-muted">Max file size: 5MB. Supported formats: JPG, PNG, GIF, WebP.</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Image Title</label>
+                                    <input type="text" class="form-control" id="title" name="title" placeholder="A short, descriptive title for your image" maxlength="300">
+                                    <small class="form-text text-muted" id="titleCharCount">0/300</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description (Optional)</label>
+                                    <textarea class="form-control" id="description" name="description" rows="5" placeholder="Add a more detailed description for your image."></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-outline-secondary-dark btn-sm" id="addFlairTagsBtn">Add flair and tags</button>
+                                    <div id="selectedTagsContainer" class="tag-container">
+                                    </div>
+                                    <div id="suggestedTagsWrapper" class="suggested-tags-wrapper">
+                                        <button type="button" class="suggested-tag" data-tag-name="Meme">#Meme</button>
+                                        <button type="button" class="suggested-tag" data-tag-name="Art">#Art</button>
+                                        <button type="button" class="suggested-tag" data-tag-name="Photography">#Photography</button>
+                                        <button type="button" class="suggested-tag" data-tag-name="Nature">#Nature</button>
+                                        <button type="button" class="suggested-tag" data-tag-name="Animals">#Animals</button>
+                                        <button type="button" class="suggested-tag" data-tag-name="Funny">😂 Funny</button>
+                                        <button type="button" class="suggested-tag" data-tag-name="Gaming">#Gaming</button>
+                                        <button type="button" class="suggested-tag" data-tag-name="Random">#Random</button>
+                                        <button type="button" class="suggested-tag" data-tag-name="Travel">#Travel</button>
+                                        <button type="button" class="suggested-tag" data-tag-name="Food">#Food</button>
+                                    </div>
+                                    <input type="hidden" name="selected_tags" id="selectedTagsInput">
+                                </div>
+
+                                <div class="form-buttons">
+                                    <button type="button" class="btn btn-secondary">Save Draft</button>
+                                    <button type="submit" class="btn btn-primary">Upload Image</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="flashMessageContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }} show" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggleBtn = document.getElementById("themeToggle");
+            const addFlairTagsBtn = document.getElementById('addFlairTagsBtn');
+            const suggestedTagsWrapper = document.getElementById('suggestedTagsWrapper');
+            const selectedTagsContainer = document.getElementById('selectedTagsContainer');
+            const selectedTagsInput = document.getElementById('selectedTagsInput'); // Hidden input for tags
+            const titleInput = document.getElementById('title');
+            const titleCharCount = document.getElementById('titleCharCount');
+            const flashMessageContainer = document.getElementById('flashMessageContainer');
+            
+            // --- Theme Toggle Logic ---
+            function applyTheme(isLightMode) {
+                if (isLightMode) {
+                    document.body.classList.add("light-mode");
+                    themeToggleBtn.innerText = "🌙 Dark Mode";
+                } else {
+                    document.body.classList.remove("light-mode");
+                    themeToggleBtn.innerText = "☀️ Light Mode";
+                }
+            }
+
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "light") {
+                applyTheme(true);
+            } else {
+                applyTheme(false);
+            }
+
+            themeToggleBtn.addEventListener("click", () => {
+                const isLight = document.body.classList.contains("light-mode");
+                applyTheme(!isLight);
+                localStorage.setItem("theme", isLight ? "dark" : "light");
+            });
+
+            // --- Title Character Count Logic (for Image Title) ---
+            titleInput.addEventListener('input', function() {
+                const currentLength = this.value.length;
+                const maxLength = this.maxLength;
+                titleCharCount.textContent = `${currentLength}/${maxLength}`;
+            });
+            titleInput.dispatchEvent(new Event('input')); // Initialize count on load
+
+            // --- Flash Message Display Logic ---
+            // For messages rendered on initial load from Flask
+            document.querySelectorAll('.flash-message').forEach(messageDiv => {
+                // messages already have 'show' class from Flask, just set timeout for removal
+                setTimeout(() => {
+                    messageDiv.classList.remove('show');
+                    // Ensure the element is removed after the transition
+                    messageDiv.addEventListener('transitionend', () => messageDiv.remove());
+                }, 4000); // Message visible for 4 seconds
+            });
+
+            // --- Flair and Tags Logic ---
+            const addedTags = new Set(); 
+
+            addFlairTagsBtn.addEventListener('click', function() {
+                suggestedTagsWrapper.style.display = suggestedTagsWrapper.style.display === 'none' ? 'flex' : 'none';
+            });
+
+            suggestedTagsWrapper.addEventListener('click', function(event) {
+                if (event.target.classList.contains('suggested-tag')) {
+                    const tagName = event.target.dataset.tagName;
+                    if (!addedTags.has(tagName)) {
+                        addedTags.add(tagName);
+                        createTagPill(tagName);
+                        updateSelectedTagsInput(); // Update hidden input
+                    }
+                }
+            });
+
+            function createTagPill(tagName) {
+                const tagPill = document.createElement('span');
+                tagPill.classList.add('tag-pill');
+                tagPill.innerHTML = `${tagName} <i class="fas fa-times remove-tag"></i>`;
+                selectedTagsContainer.appendChild(tagPill);
+
+                tagPill.querySelector('.remove-tag').addEventListener('click', function() {
+                    tagPill.remove();
+                    addedTags.delete(tagName);
+                    updateSelectedTagsInput(); // Update hidden input
+                });
+            }
+
+            function updateSelectedTagsInput() {
+                selectedTagsInput.value = JSON.stringify(Array.from(addedTags));
+            }
+        });
+    </script>
+</body>
+</html>
