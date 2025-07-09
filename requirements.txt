@@ -1,0 +1,6 @@
+Flask
+Flask-WTF
+python-dateutil
+Flask-SocketIO
+eventlet
+gunicorn
