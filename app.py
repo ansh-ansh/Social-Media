@@ -17,7 +17,7 @@ from flask import send_from_directory # Added for serving uploaded files
 # --- App Setup ---
 app = Flask(__name__)
 # IMPORTANT: Replace with a strong, unique, and random key in production!
-app.secret_key = os.environ.get('SECRET_KEY', 'a_fallback_secret_key_for_dev_only_replace_this_in_prod')
+app.secret_key = 'your_super_secret_and_unique_key_here_replace_this'
 
 # --- Session Lifetime ---
 app.permanent_session_lifetime = timedelta(days=365) # Make session last for 1 year (or any duration you want)
