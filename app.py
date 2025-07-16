@@ -12,12 +12,12 @@ import sys
 from dateutil.relativedelta import relativedelta
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask import send_from_directory # Added for serving uploaded files
-print(os.urandom(24).hex())
+
 
 # --- App Setup ---
 app = Flask(__name__)
 # IMPORTANT: Replace with a strong, unique, and random key in production!
-app.secret_key = os.environ.get('SECRET_KEY')
+app.secret_key = 'your_super_secret_and_unique_key_here_replace_this'
 
 # --- Session Lifetime ---
 app.permanent_session_lifetime = timedelta(days=365) # Make session last for 1 year (or any duration you want)
