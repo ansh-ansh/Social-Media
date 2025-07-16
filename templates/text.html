@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AnonBoard | Threads</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /*
+            Inline styles are typically for quick tweaks or overrides specific to this page
+            that aren't present in the main style.css.
+            Given the previous context, these styles might be repeated from `style.css`
+            or `feed.html`'s inline styles to ensure consistent appearance.
+            If these are truly redundant and exist identically in `style.css`,
+            you can remove them after confirming `style.css` is properly linked and contains them.
+            I'm including them here to ensure the visual integrity based on the provided snippets.
+        */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #18191a;
+            color: #e4e6eb;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: #242526; /* Default dark background for sidebar */
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .sidebar .logo-container {
+            background-color: #242526;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+        }
+
+        .sidebar h2 {
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            text-decoration: none;
+            color: #b0b3b8;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar a.active,
+        .sidebar a:hover {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            flex-grow: 1;
+            width: calc(100% - 250px);
+            box-sizing: border-box;
+        }
+
+        .main-controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .thread-post-button {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .thread-post-button:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-1px);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .search-bar-wrapper {
+            background-color: #2e3032;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 15px;
+        }
+
+        .search-bar-wrapper .search-icon {
+            color: #b0b3b8;
+            margin-right: 10px;
+        }
+
+        .search-bar-wrapper .search-input-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .search-bar-wrapper .search-input {
+            background-color: transparent;
+            border: none;
+            color: #e4e6eb;
+            flex-grow: 1;
+            padding: 0;
+            outline: none;
+            min-width: 0;
+        }
+
+        .search-bar-wrapper .search-input::placeholder {
+            color: #b0b3b8;
+        }
+
+        .search-bar-wrapper .search-tag {
+            background-color: #556c7f;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+
+        .search-bar-wrapper .search-tag .remove-tag {
+            cursor: pointer;
+            color: #e4e6eb;
+            font-size: 0.8em;
+        }
+
+        .btn-toggle {
+            background-color: transparent;
+            border: 1px solid #e4e6eb;
+            color: #e4e6eb;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-toggle.active {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+        }
+
+        .dropdown-menu-dark {
+            background-color: #3a3b3c;
+            color: white;
+            border: 1px solid #4a4d50;
+        }
+
+        .dropdown-item-text {
+            padding: 8px 20px;
+            color: #e4e6eb;
+            background-color: transparent;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .btn-light-mode {
+            background-color: transparent;
+            border: 1px solid #e4e6eb;
+            color: #e4e6eb;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .post-card {
+            display: flex;
+            align-items: flex-start;
+            background: #242526;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #e4e6eb;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer; /* Indicate clickability for the card */
+        }
+
+        .post-card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .vote-controls {
+            /* Changed to horizontal layout */
+            display: flex;
+            flex-direction: row; /* Changed from column */
+            align-items: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            min-width: 80px; /* Ensure space for the pill */
+        }
+
+        .vote-button-group {
+            /* Changed to horizontal pill-like shape */
+            display: flex;
+            flex-direction: row; /* Changed from column */
+            align-items: center;
+            gap: 5px; /* Spacing between buttons and score */
+            background-color: #3a3b3c;
+            border-radius: 20px; /* Makes it pill-shaped */
+            padding: 5px 10px; /* Adjust padding for horizontal pill look */
+            transition: background-color 0.3s ease;
+        }
+
+        .vote-controls .vote-btn {
+            background: none;
+            border: none;
+            color: #b0b3b8;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .vote-controls .vote-btn:hover {
+            color: white;
+        }
+
+        .vote-controls .vote-btn.upvote.active {
+            color: #28a745;
+        }
+
+        .vote-controls .vote-btn.downvote.active {
+            color: #dc3545;
+        }
+
+        .vote-controls .sigma-score {
+            font-weight: bold;
+            color: #e4e6eb;
+            font-size: 1em;
+            min-width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .post-content-container {
+            flex-grow: 1;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+        .post-header strong.post-username {
+            font-size: 1.1em;
+            color: white;
+        }
+
+        .post-header .text-muted.small {
+            font-size: 0.85em;
+            color: #b0b3b8;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .post-header .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .post-title-rendered h1, .post-title-rendered h2, .post-title-rendered h3,
+        .post-title-rendered h4, .post-title-rendered h5, .post-title-rendered h6 {
+            color: white;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .post-body-rendered p {
+            margin-bottom: 0.5em;
+        }
+
+        .comment-section {
+            border-top: 1px solid #3a3b3c;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .comment-box {
+            background-color: #3a3b3c;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            line-height: 1.4;
+            color: #e4e6eb;
+        }
+
+        .comment-box strong {
+            color: white;
+        }
+
+        .comment-box .text-muted.small {
+            color: #b0b3b8;
+        }
+
+        /* Compact View */
+        .post-card.compact-view {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        .post-card.compact-view .vote-controls {
+            /* Already horizontal, no changes needed for this part, ensuring consistency */
+            flex-direction: row;
+            margin-right: 0;
+            flex-shrink: 0;
+            align-self: center;
+        }
+
+        .post-card.compact-view .vote-button-group {
+            /* Keep compact view's specific smaller padding if desired, or let it inherit the new pill style */
+            flex-direction: row;
+            padding: 3px 8px; /* Slightly smaller padding for compact */
+            gap: 3px;
+        }
+
+        .post-card.compact-view .post-content-container {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .post-card.compact-view .post-header {
+            margin-bottom: 0;
+            justify-content: flex-start;
+            gap: 5px;
+        }
+
+        .post-card.compact-view .post-header strong.post-username {
+            font-size: 1em;
+            margin-right: 5px;
+        }
+
+        .post-card.compact-view .post-title-rendered,
+        .post-card.compact-view .post-body-rendered {
+            display: inline;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .post-card.compact-view .post-title-rendered h2,
+        .post-card.compact-view .post-body-rendered p {
+            display: inline;
+            margin: 0;
+            font-size: 1em;
+        }
+
+        .post-card.compact-view .post-actions,
+        .post-card.compact-view .comment-section {
+            display: none;
+        }
+
+        .filter-view-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .filter-view-controls .dropdown-toggle {
+            background-color: #2e3032;
+            border: 1px solid #4a4d50;
+            color: #e4e6eb;
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .filter-view-controls .dropdown-toggle:hover {
+            background-color: #3a3b3c;
+            border-color: #5a5d60;
+        }
+
+        .filter-view-controls .dropdown-menu {
+            background-color: #2e3032;
+            border: 1px solid #4a4d50;
+            border-radius: 5px;
+        }
+
+        .filter-view-controls .dropdown-item {
+            color: #e4e6eb;
+            padding: 8px 15px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .filter-view-controls .dropdown-item:hover,
+        .filter-view-controls .dropdown-item.active {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        .right-panel {
+            background: #242526;
+            border-radius: 10px;
+            padding: 20px;
+            margin-left: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #e4e6eb;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            position: sticky;
+            top: 20px;
+        }
+
+        .right-panel h6 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .right-panel p, .right-panel ul {
+            font-size: 0.95em;
+            color: #b0b3b8;
+            margin-bottom: 8px;
+        }
+
+        .right-panel ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .right-panel ul li::before {
+            content: '• ';
+            color: #0d6efd;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        /* LIGHT MODE OVERRIDES */
+        body.light-mode {
+            background-color: #f0f2f5;
+            color: #000;
+        }
+
+        body.light-mode .post-card {
+            background: white;
+            color: black;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        body.light-mode .post-card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode .post-header strong.post-username,
+        body.light-mode .post-title-rendered h1, body.light-mode .post-title-rendered h2,
+        body.light-mode .post-title-rendered h3, body.light-mode .post-title-rendered h4,
+        body.light-mode .post-title-rendered h5, body.light-mode .post-title-rendered h6 {
+            color: black;
+        }
+        body.light-mode .post-header .text-muted.small {
+            color: #6c757d;
+        }
+        body.light-mode .comment-section {
+            border-top: 1px solid #e0e0e0;
+        }
+        body.light-mode .comment-box {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        body.light-mode .comment-box strong {
+            color: #000;
+        }
+        body.light-mode .comment-box .text-muted.small {
+            color: #6c757d;
+        }
+
+        body.light-mode .btn-toggle {
+            color: black;
+            border-color: black;
+        }
+
+        body.light-mode .btn-light-mode {
+            background-color: transparent;
+            border: 1px solid #000;
+            color: #000;
+        }
+
+        body.light-mode .vote-button-group {
+            background-color: #e0e2e5;
+            border: 1px solid #ccc;
+        }
+        body.light-mode .vote-controls .vote-btn {
+            color: #555;
+        }
+        body.light-mode .vote-controls .vote-btn:hover {
+            color: #0d6efd;
+        }
+        body.light-mode .vote-controls .sigma-score {
+            color: #000;
+        }
+
+        body.light-mode .sidebar {
+            background-color: #1a1a1a;
+        }
+        body.light-mode .sidebar .logo-container {
+            background-color: #1a1a1a;
+        }
+        body.light-mode .sidebar h2,
+        body.light-mode .sidebar a,
+        body.light-mode .sidebar .dropdown-toggle {
+            color: white !important;
+        }
+        body.light-mode .sidebar .dropdown-menu-dark {
+            background-color: #3a3b3c;
+            border-color: #4a4d50;
+        }
+        body.light-mode .sidebar .dropdown-menu-dark .dropdown-item-text {
+            color: white !important;
+            background-color: transparent !important;
+            border: none !important;
+        }
+        body.light-mode .sidebar a:hover,
+        body.light-mode .sidebar a.active {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        body.light-mode .search-bar-wrapper {
+            background-color: #e0e2e5;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode .search-bar-wrapper .search-icon {
+            color: #555;
+        }
+        body.light-mode .search-bar-wrapper .search-input {
+            color: #000;
+        }
+        body.light-mode .search-bar-wrapper .search-input::placeholder {
+            color: #888;
+        }
+        body.light-mode .search-bar-wrapper .search-tag {
+            background-color: #a0c0e0;
+            color: #000;
+        }
+        body.light-mode .search-bar-wrapper .search-tag .remove-tag {
+            color: #333;
+        }
+
+        body.light-mode .filter-view-controls .dropdown-toggle {
+            background-color: white;
+            border: 1px solid #ccc;
+            color: #000;
+        }
+        body.light-mode .filter-view-controls .dropdown-toggle:hover {
+            background-color: #f0f0f0;
+            border-color: #bbb;
+        }
+        body.light-mode .filter-view-controls .dropdown-menu {
+            background-color: white;
+            border: 1px solid #ccc;
+        }
+        body.light-mode .filter-view-controls .dropdown-item {
+            color: #000;
+        }
+        body.light-mode .filter-view-controls .dropdown-item.active {
+            background-color: #e9ecef;
+            color: black;
+        }
+        body.light-mode .filter-view-controls .dropdown-item:hover {
+            background-color: #e9ecef;
+            color: black;
+        }
+
+        /* Media queries for responsiveness */
+        @media (max-width: 991px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+            .content {
+                margin-left: 0;
+                padding-top: 10px;
+                width: 100%;
+            }
+            .sidebar .logo-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding-bottom: 10px;
+                margin-bottom: 0;
+            }
+            .sidebar img {
+                height: 100px !important;
+                background-color: transparent;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+            .sidebar a {
+                justify-content: center;
+            }
+            .sidebar .dropdown {
+                width: calc(100% - 40px);
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+            .sidebar h2 {
+                display: none;
+            }
+            .main-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .thread-post-button {
+                width: 100%; /* Make button full width on small screens */
+                margin-right: 0;
+                margin-bottom: 15px; /* Add space below button */
+            }
+            .toggle-group {
+                width: 100%; /* Make toggle group full width */
+                margin-left: 0;
+                justify-content: center;
+            }
+            .search-bar-wrapper {
+                width: 100%;
+                margin-top: 0;
+            }
+            .post-card:not(.compact-view) {
+                flex-direction: column;
+                align-items: center;
+                padding: 15px;
+            }
+            .post-card:not(.compact-view) .vote-controls {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            .post-card:not(.compact-view) .post-content-container {
+                width: 100%;
+            }
+            .post-card:not(.compact-view) .post-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .filter-view-controls {
+                flex-direction: column;
+            }
+            .filter-view-controls .dropdown-toggle {
+                width: 100%;
+                justify-content: center;
+            }
+            .right-panel {
+                margin-left: 0;
+                margin-top: 20px;
+                position: relative; /* Remove sticky on mobile for better flow */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <div class="sidebar d-flex flex-column">
+            <div class="text-center mb-3 logo-container">
+                <img src="{{ url_for('static', filename='templates/eec78dfd-22c3-4bc8-92b8-226e6a3329a4.png') }}" alt="AnonBoard Logo" style="height: 170px; margin-bottom: 1px;" class="img-fluid" />
+            </div>
+            <a href="{{ url_for('feed') }}" class="">🏠 Home</a>
+            <a href="{{ url_for('text_discussions') }}" class="active">💬 Thread Discussions</a>
+            <a href="/photos">🖼️ Image Feed</a>
+            <div class="dropdown mt-4 w-100">
+                <button class="btn btn-outline-light dropdown-toggle w-100" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    👤 Profile
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="profileDropdown">
+                    <li><span class="dropdown-item-text"><strong>Username:</strong> Anon{{ '%04d' % (anon_id | int) }}</span></li>
+                    <li><span class="dropdown-item-text"><strong>Joined:</strong> {{ join_date }}</span></li>
+                    <li><span class="dropdown-item-text" id="user-sigma-score"><strong>Sigma:</strong> {{ sigma_score }}</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="container-fluid">
+                <div class="main-controls">
+                    <button class="thread-post-button" onclick="window.location.href='{{ url_for('create_thread_post') }}'">
+                        <i class="fas fa-plus"></i> Create New Thread
+                    </button>
+                    <div class="toggle-group">
+                        <button class="btn btn-light-mode" id="themeToggle">☀️ Light Mode</button>
+                    </div>
+                </div>
+
+                <div class="search-bar-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <div class="search-input-container">
+                        <input
+                            class="search-input"
+                            type="search"
+                            placeholder="Search in Threads"
+                            id="mainSearchInput"
+                            value="{{ search_query }}"
+                        />
+                    </div>
+                </div>
+
+                <div class="filter-view-controls">
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-sort"></i> Sort: {{ sort.capitalize() }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                            <li><a class="dropdown-item {% if sort == 'best' %}active{% endif %}" href="{{ url_for('text_discussions', sort='best', view=view, q=search_query) }}" data-sort="best">Best (Most Comments)</a></li>
+                            <li><a class="dropdown-item {% if sort == 'hottest' %}active{% endif %}" href="{{ url_for('text_discussions', sort='hottest', view=view, q=search_query) }}" data-sort="hottest">Hot (Most Votes)</a></li>
+                            <li><a class="dropdown-item {% if sort == 'latest' %}active{% endif %}" href="{{ url_for('text_discussions', sort='latest', view=view, q=search_query) }}" data-sort="latest">New (Latest Posts)</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="viewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-th-large"></i> View: {{ view.capitalize() }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="viewDropdown">
+                            <li><a class="dropdown-item {% if view == 'card' %}active{% endif %}" href="{{ url_for('text_discussions', sort=sort, view='card', q=search_query) }}" data-view="card">Card</a></li>
+                            <li><a class="dropdown-item {% if view == 'compact' %}active{% endif %}" href="{{ url_for('text_discussions', sort=sort, view='compact', q=search_query) }}" data-view="compact">Compact</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        {% if posts and posts|length > 0 %}
+                            {% for post in posts %}
+    <div class="post-card {% if view == 'compact' %}compact-view{% endif %}" data-post-id="{{ post[0] }}">
+        <div class="vote-controls">
+            <div class="vote-button-group">
+                <button type="button" class="vote-btn upvote {% if post[9] == 'up' %}active{% endif %}" data-post-id="{{ post[0] }}" data-vote-type="up">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+                <span class="sigma-score" id="score-{{ post[0] }}">{{ post[5] or 0 }}</span>
+                <button type="button" class="vote-btn downvote {% if post[9] == 'down' %}active{% endif %}" data-post-id="{{ post[0] }}" data-vote-type="down">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+            </div>
+        </div>
+        <div class="post-content-container">
+            <div class="post-header">
+                {# Post Title (bold and big) - now using post[2] from app.py #}
+                {% if post[2] %}
+                    <h2 class="post-title-rendered mt-2" data-markdown-content="{{ post[2] }}"></h2>
+                {% endif %}
+
+                {# Post Body/Description - now using post[1] from app.py #}
+                {% if post[1] %}
+                    <p class="post-body-rendered" data-markdown-content="{{ post[1] }}"></p>
+                {% endif %}
+
+                {# Anon ID and Timestamp - using post[6] and post[4] from app.py #}
+                <div class="post-meta-line">
+                    <strong class="post-username">Anon{{ '%04d' % (post[6] | int) }}</strong> {# post[6] is original_poster_anon_id (numerical) #}
+                    <span class="text-muted small"> • {{ post[4] | format_time_ago }}</span> {# post[4] is created timestamp #}
+                </div>
+
+                <div class="post-actions d-flex justify-content-end align-items-center mt-2">
+                    <a href="{{ url_for('post_detail', post_id=post[0]) }}" class="btn btn-sm btn-outline-secondary ms-2 comment-link">
+                        <i class="fas fa-comment"></i> Comments ({{ post[8] or 0 }}) {# post[8] is total_comments #}
+                    </a>
+                    {% if post[6] == anon_id %} {# post[6] is original_poster_anon_id for comparison #}
+                        <form action="{{ url_for('delete_post', post_id=post[0], sort=sort, view=view, q=search_query) }}" method="POST" style="display:inline; margin-left: auto;" onsubmit="return confirm('Are you sure you want to delete this post?');" class="delete-form">
+                            {{ delete_post_form.csrf_token }} {# Keep CSRF token #}
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Post">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="comment-section">
+                {% if post[7] %} {# post[7] is formatted_comments #}
+                    <h6 class="mt-3">💬 Latest Comments</h6>
+                    {% for comment in post[7] %}
+                        <div class="comment-box">
+                            <strong>anon{{ '%04d' % (comment[1] | int) }}:</strong> {# comment[1] is commenter_anon_id #}
+                            <span class="comment-content-rendered" data-markdown-content="{{ comment[2] }}"></span> {# comment[2] is content #}
+                            <span class="text-muted small ms-2">{{ comment[5] | format_time_ago }}</span> {# CORRECTED: comment[5] is created timestamp for comments #}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted small mt-3">No comments yet.</p>
+                {% endif %}
+                {% if post[8] and post[8] > 2 %} {# post[8] is total_comments #}
+                    <div class="text-end mt-2">
+                        <a href="{{ url_for('post_detail', post_id=post[0]) }}" class="btn btn-sm btn-link text-decoration-none comment-link">
+                            View All {{ post[8] }} Comments <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center mt-5">No threads yet. Be the first to start a discussion!</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="right-panel">
+                            <h6>Your Profile (Anonymous)</h6>
+                            <p>🧑 Username: anon{{ '%04d' % (anon_id | int) }}</p>
+                            <p>💪 Total Sigma: <span id="user-sigma-score-right-panel">{{ sigma_score }}</span></p>
+                            <p>⏰ Joined: {{ join_date }}</p>
+                            <hr>
+                            <h6>Activity Summary:</h6>
+                            <p>📝 Threads Created: {{ threads_created }}</p>
+                            <p>💬 Comments Made: {{ comments_made }}</p>
+                            <p>⬆️ Average Upvotes per Thread: {{ average_upvotes }}</p>
+                            <hr>
+                            <h6>💡 Daily Insight:</h6>
+                            <p class="small fst-italic">"The greatest glory in living lies not in never falling, but in rising every time we fall." - Nelson Mandela</p>
+                            <hr>
+                            <h6>Tips:</h6>
+                            <ul>
+                                <li>Use ✨ Markdown</li>
+                                <li>Stay anonymous</li>
+                                <li>Post whatever. Literally.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.0/marked.min.js"></script>
+    <script type="text/javascript">
+    var socket = io(); // Connects to the SocketIO server
+
+    socket.on('connect', function() {
+        console.log('Connected to WebSocket server!');
+    });
+
+    socket.on('disconnect', function() {
+        console.log('Disconnected from WebSocket server.');
+    });
+
+    // Listen for the 'update_sigma' event
+    socket.on('update_sigma', function(data) {
+        console.log('Received update_sigma event:', data);
+        const currentAnonId = "{{ anon_id }}"; // Get the current user's anon_id from Jinja
+
+        // Only update if the event is for the current user's profile
+        if (data.anon_id == currentAnonId) { // Use == for comparison with string anon_id from Jinja
+            const sigmaScoreElement = document.getElementById('user-sigma-score'); 
+            const sigmaScoreElementRightPanel = document.getElementById('user-sigma-score-right-panel'); 
+            if (sigmaScoreElement) {
+                sigmaScoreElement.textContent = `Sigma: ${data.new_sigma}`; 
+                console.log(`Updated profile dropdown sigma score to: ${data.new_sigma}`);
+            }
+            if (sigmaScoreElementRightPanel) { 
+                sigmaScoreElementRightPanel.textContent = data.new_sigma;
+                console.log(`Updated right panel sigma score to: ${data.new_sigma}`);
+            }
+        }
+    });
+
+    // Listen for 'update_post_sigma' event for posts
+    socket.on('update_post_sigma', function(data) {
+        console.log('Received update_post_sigma event:', data);
+        const scoreSpan = document.getElementById(`score-${data.post_id}`);
+        if (scoreSpan) {
+            scoreSpan.textContent = data.new_sigma;
+            console.log(`Updated post ${data.post_id} sigma to: ${data.new_sigma}`);
+        }
+    });
+
+    // You might also need a socket.on for 'update_comment_sigma' if you plan to update comments in real-time
+    socket.on('update_comment_sigma', function(data) {
+        console.log('Received update_comment_sigma event:', data);
+        // Implement logic to find and update the specific comment's sigma score
+        // This would depend on how your comments are structured and identified in the HTML
+    });
+
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggleBtn = document.getElementById("themeToggle");
+            
+            function applyTheme(isLightMode) {
+                if (isLightMode) {
+                    document.body.classList.add("light-mode");
+                    themeToggleBtn.innerText = "🌙 Dark Mode";
+                } else {
+                    document.body.classList.remove("light-mode");
+                    themeToggleBtn.innerText = "☀️ Light Mode";
+                }
+            }
+
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "light") {
+                applyTheme(true);
+            } else {
+                applyTheme(false);
+            }
+
+            themeToggleBtn.addEventListener("click", () => {
+                const isLight = document.body.classList.contains("light-mode");
+                applyTheme(!isLight);
+                localStorage.setItem("theme", isLight ? "dark" : "light");
+            });
+
+            const mainSearchInput = document.getElementById('mainSearchInput');
+            const searchInputContainer = document.querySelector('.search-input-container');
+
+            function updateAndGoToUrl() {
+                const currentUrl = new URL(window.location.href);
+                const params = new URLSearchParams(currentUrl.search);
+                const searchValue = mainSearchInput.value.trim();
+
+                if (searchValue) {
+                    params.set('q', searchValue);
+                } else {
+                    params.delete('q');
+                }
+
+                const currentSort = params.get('sort') || 'best';
+                const currentView = params.get('view') || 'card';
+
+                params.set('sort', currentSort);
+                params.set('view', currentView);
+
+                currentUrl.search = params.toString();
+                window.location.href = currentUrl.toString();
+            }
+
+            mainSearchInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    updateAndGoToUrl();
+                }
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('q');
+
+            if (searchQuery) {
+                const searchTag = document.createElement('span');
+                searchTag.classList.add('search-tag');
+                searchTag.innerHTML = `
+                    <img src="https://img.icons8.com/color/16/000000/reddit--v1.png" alt="AnonBoard Icon" style="height: 16px; width: 16px;">
+                    ${searchQuery}
+                    <i class="fas fa-times remove-tag" style="margin-left: 5px;"></i>
+                `;
+                searchInputContainer.prepend(searchTag);
+                mainSearchInput.placeholder = '';
+                mainSearchInput.style.width = 'fit-content';
+                mainSearchInput.style.flexGrow = '0';
+
+                const removeTagButton = searchTag.querySelector('.remove-tag');
+                if (removeTagButton) {
+                    removeTagButton.addEventListener('click', () => {
+                        searchTag.remove();
+                        mainSearchInput.value = '';
+                        mainSearchInput.placeholder = 'Search in AnonBoard';
+                        mainSearchInput.style.width = '';
+                        mainSearchInput.style.flexGrow = '1';
+                        updateAndGoToUrl();
+                    });
+                }
+            }
+
+            const sortDropdownItems = document.querySelectorAll('#sortDropdown + .dropdown-menu .dropdown-item');
+            const viewDropdownItems = document.querySelectorAll('#viewDropdown + .dropdown-menu .dropdown-item');
+
+            sortDropdownItems.forEach(item => {
+                item.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const newSort = this.dataset.sort;
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('sort', newSort);
+                    const currentQ = urlParams.get('q');
+                    if (currentQ) {
+                        currentUrl.searchParams.set('q', currentQ);
+                    } else {
+                        currentUrl.searchParams.delete('q');
+                    }
+                    const currentView = urlParams.get('view');
+                    if (currentView) {
+                        currentUrl.searchParams.set('view', currentView);
+                    } else {
+                        currentUrl.searchParams.delete('view');
+                    }
+                    window.location.href = currentUrl.toString();
+                });
+            });
+
+            viewDropdownItems.forEach(item => {
+                item.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const newView = this.dataset.view;
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('view', newView);
+                    const currentQ = urlParams.get('q');
+                    if (currentQ) {
+                        currentUrl.searchParams.set('q', currentQ);
+                    } else {
+                        currentUrl.searchParams.delete('q');
+                    }
+                    const currentSort = urlParams.get('sort');
+                    if (currentSort) {
+                        currentUrl.searchParams.set('sort', currentSort);
+                    } else {
+                        currentUrl.searchParams.delete('sort');
+                    }
+                    window.location.href = currentUrl.toString();
+                });
+            });
+
+            // Markdown Rendering Logic
+            marked.setOptions({
+                sanitize: true,
+                gfm: true
+            });
+
+            document.querySelectorAll('.post-title-rendered').forEach(element => {
+                const markdownContent = element.dataset.markdownContent;
+                if (markdownContent) {
+                    element.innerHTML = marked.parse(markdownContent);
+                    if (element.children.length === 1 && element.children[0].tagName === 'P') {
+                        element.innerHTML = element.children[0].innerHTML;
+                    }
+                }
+            });
+
+            document.querySelectorAll('.post-body-rendered').forEach(element => {
+                const markdownContent = element.dataset.markdownContent;
+                if (markdownContent) {
+                    element.innerHTML = marked.parse(markdownContent);
+                }
+            });
+
+            document.querySelectorAll('.comment-content-rendered').forEach(element => {
+                const markdownContent = element.dataset.markdownContent;
+                if (markdownContent) {
+                    element.innerHTML = marked.parse(markdownContent);
+                }
+            });
+
+            // AJAX for upvote/downvote
+            document.querySelectorAll('.vote-btn').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent default button action (form submission)
+                    event.stopPropagation(); // Prevent click from bubbling up to the anchor tag
+
+                    const postId = parseInt(this.dataset.postId, 10);
+                    const voteType = this.dataset.voteType; // 'up' or 'down'
+
+                    if (isNaN(postId) || !voteType) {
+                        console.error('Missing or invalid postId or voteType on the button:', this);
+                        alert('Error: Could not determine post ID or vote type correctly. Please refresh.');
+                        return; // Stop execution if data is invalid
+                    }
+
+                    fetch('/vote', { // Make sure this endpoint matches your Flask app.py
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        // --- CRITICAL CHANGE HERE ---
+                        body: JSON.stringify({ item_type: 'post', post_id: postId, vote_type: voteType }) 
+                        // You were sending `post_id` but not `item_type`.
+                        // Your Flask backend now expects `item_type` and tries to get `post_id` or `comment_id`.
+                        // So, explicitly send `item_type: 'post'` and keep `post_id`.
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.message || 'Server error'); });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            const scoreSpan = document.getElementById(`score-${postId}`);
+                            if (scoreSpan) {
+                                scoreSpan.textContent = data.new_score;
+
+                                const currentUpvoteBtn = this.closest('.vote-button-group').querySelector('.upvote');
+                                const currentDownvoteBtn = this.closest('.vote-button-group').querySelector('.downvote');
+
+                                currentUpvoteBtn.classList.remove('active');
+                                currentDownvoteBtn.classList.remove('active');
+
+                                if (data.user_vote_status === 'up') {
+                                    currentUpvoteBtn.classList.add('active');
+                                } else if (data.user_vote_status === 'down') {
+                                    currentDownvoteBtn.classList.add('active');
+                                }
+                            }
+                        } else {
+                            console.error('Voting failed (server reported failure):', data.message);
+                            alert('Could not cast vote: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error during vote:', error);
+                        alert('An error occurred while voting: ' + error.message || 'Unknown error');
+                    });
+                });
+            });
+
+            // Handle post card clicks for navigation, excluding vote buttons and comments link
+            document.querySelectorAll('.post-card').forEach(card => {
+                card.addEventListener('click', function(event) {
+                    // Check if the clicked element or its parent is a vote button or comment link
+                    if (event.target.closest('.vote-btn') || event.target.closest('.comment-link') || event.target.closest('.delete-form')) {
+                        return; // Do nothing if a specific interactive element was clicked
+                    }
+
+                    // If not an interactive element, navigate to post_detail
+                    const postId = this.dataset.postId; // Get post_id from the data attribute on the .post-card
+                    if (postId) {
+                        window.location.href = `/post/${postId}`;
+                    } else {
+                        console.warn('Could not find postId for navigation on clicked post-card.');
+                    }
+                });
+            });
+
+            // Ensure delete form submission is handled properly without interfering with card click
+            document.querySelectorAll('.delete-form').forEach(form => {
+                form.addEventListener('click', function(event) {
+                    event.stopPropagation(); // Stop click from propagating to parent card
+                });
+                // The onsubmit="return confirm(...)" will still work for actual form submission
+            });
+        });
+    </script>
+</body>
+</html>

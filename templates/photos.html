@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnonBoard - Image Feed</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* All the CSS provided by the user goes here.
+           I am omitting it for brevity in this response,
+           but you should copy and paste it entirely from your original CSS. */
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #18191a;
+            color: #e4e6eb;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: #242526; /* Default dark background for sidebar */
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .sidebar .logo-container {
+            background-color: #242526;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+        }
+
+        .sidebar h2 {
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            text-decoration: none;
+            color: #b0b3b8;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar a.active,
+        .sidebar a:hover {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            flex-grow: 1;
+            width: calc(100% - 250px);
+            box-sizing: border-box;
+        }
+
+        .main-controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .thread-post-button { /* Renamed to photo-upload-button in HTML, but keeping style name for consistency if not changing */
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .thread-post-button:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-1px);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .search-bar-wrapper {
+            background-color: #2e3032;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 15px;
+        }
+
+        .search-bar-wrapper .search-icon {
+            color: #b0b3b8;
+            margin-right: 10px;
+        }
+
+        .search-bar-wrapper .search-input-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .search-bar-wrapper .search-input {
+            background-color: transparent;
+            border: none;
+            color: #e4e6eb;
+            flex-grow: 1;
+            padding: 0;
+            outline: none;
+            min-width: 0;
+        }
+
+        .search-bar-wrapper .search-input::placeholder {
+            color: #b0b3b8;
+        }
+
+        .search-bar-wrapper .search-tag {
+            background-color: #556c7f;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+
+        .search-bar-wrapper .search-tag .remove-tag {
+            cursor: pointer;
+            color: #e4e6eb;
+            font-size: 0.8em;
+        }
+
+        .btn-toggle {
+            background-color: transparent;
+            border: 1px solid #e4e6eb;
+            color: #e4e6eb;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-toggle.active {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+        }
+
+        .dropdown-menu-dark {
+            background-color: #3a3b3c;
+            color: white;
+            border: 1px solid #4a4d50;
+        }
+
+        .dropdown-item-text {
+            padding: 8px 20px;
+            color: #e4e6eb;
+            background-color: transparent;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .btn-light-mode {
+            background-color: transparent;
+            border: 1px solid #e4e6eb;
+            color: #e4e6eb;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .post-card { /* Renamed to .photo-card for images */
+            display: flex;
+            align-items: flex-start;
+            background: #242526;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #e4e6eb;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer; /* Indicate clickability for the card */
+        }
+
+        .post-card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .vote-controls {
+            /* Changed to horizontal layout */
+            display: flex;
+            flex-direction: row; /* Changed from column */
+            align-items: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            min-width: 80px; /* Ensure space for the pill */
+        }
+
+        .vote-button-group {
+            /* Changed to horizontal pill-like shape */
+            display: flex;
+            flex-direction: row; /* Changed from column */
+            align-items: center;
+            gap: 5px; /* Spacing between buttons and score */
+            background-color: #3a3b3c;
+            border-radius: 20px; /* Makes it pill-shaped */
+            padding: 5px 10px; /* Adjust padding for horizontal pill look */
+            transition: background-color 0.3s ease;
+        }
+
+        .vote-controls .vote-btn {
+            background: none;
+            border: none;
+            color: #b0b3b8;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .vote-controls .vote-btn:hover {
+            color: white;
+        }
+
+        .vote-controls .vote-btn.upvote.active {
+            color: #28a745;
+        }
+
+        .vote-controls .vote-btn.downvote.active {
+            color: #dc3545;
+        }
+
+        .vote-controls .sigma-score {
+            font-weight: bold;
+            color: #e4e6eb;
+            font-size: 1em;
+            min-width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .post-content-container { /* Renamed to .photo-content-container for images */
+            flex-grow: 1;
+        }
+
+        .post-header { /* Renamed to .photo-header for images */
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+        .post-header strong.post-username { /* Renamed to strong.photo-username */
+            font-size: 1.1em;
+            color: white;
+        }
+
+        .post-header .text-muted.small {
+            font-size: 0.85em;
+            color: #b0b3b8;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .post-header .post-actions { /* Renamed to .photo-actions */
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .post-title-rendered h1, .post-title-rendered h2, .post-title-rendered h3,
+        .post-title-rendered h4, .post-title-rendered h5, .post-title-rendered h6 {
+            color: white;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .post-body-rendered p {
+            margin-bottom: 0.5em;
+        }
+
+        .comment-section {
+            border-top: 1px solid #3a3b3c;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .comment-box {
+            background-color: #3a3b3c;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            line-height: 1.4;
+            color: #e4e6eb;
+        }
+
+        .comment-box strong {
+            color: white;
+        }
+
+        .comment-box .text-muted.small {
+            color: #b0b3b8;
+        }
+
+        /* Compact View for text discussions - kept here for completeness but might not be relevant for images in the same way */
+        .post-card.compact-view {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        .post-card.compact-view .vote-controls {
+            flex-direction: row;
+            margin-right: 0;
+            flex-shrink: 0;
+            align-self: center;
+        }
+
+        .post-card.compact-view .vote-button-group {
+            flex-direction: row;
+            padding: 3px 8px;
+            gap: 3px;
+        }
+
+        .post-card.compact-view .post-content-container {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .post-card.compact-view .post-header {
+            margin-bottom: 0;
+            justify-content: flex-start;
+            gap: 5px;
+        }
+
+        .post-card.compact-view .post-header strong.post-username {
+            font-size: 1em;
+            margin-right: 5px;
+        }
+
+        .post-card.compact-view .post-title-rendered,
+        .post-card.compact-view .post-body-rendered {
+            display: inline;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .post-card.compact-view .post-title-rendered h2,
+        .post-card.compact-view .post-body-rendered p {
+            display: inline;
+            margin: 0;
+            font-size: 1em;
+        }
+
+        .post-card.compact-view .post-actions,
+        .post-card.compact-view .comment-section {
+            display: none;
+        }
+
+
+        /* New styles for photo-card and photo-grid */
+        .photo-card {
+            background: #242526;
+            border-radius: 10px;
+            padding: 15px; /* Adjust padding for photo cards */
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #e4e6eb;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column; /* Stack image, then text */
+            align-items: center;
+            text-align: center;
+            overflow: hidden; /* For image border-radius */
+        }
+
+        .photo-card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .photo-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px; /* Slightly smaller radius for image itself */
+            margin-bottom: 10px;
+            object-fit: cover; /* Ensure image covers the area, can be 'contain' too */
+        }
+
+        .photo-card video { /* Added styling for video elements */
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            object-fit: cover;
+        }
+
+        .photo-card .photo-info {
+            width: 100%;
+            padding: 5px 0;
+        }
+
+        .photo-card .photo-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-card .photo-meta {
+            font-size: 0.85em;
+            color: #b0b3b8;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .photo-card .photo-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; /* Spacing for like, comment, delete */
+            width: 100%;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #3a3b3c;
+        }
+
+        .photo-card .photo-actions .btn-action {
+            background: none;
+            border: none;
+            color: #b0b3b8;
+            font-size: 1em;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .photo-card .photo-actions .btn-action:hover {
+            color: white;
+        }
+
+        .photo-card .photo-actions .btn-action.like.active {
+            color: #dc3545; /* Red for liked */
+        }
+
+        /* Grid View for photos */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Responsive grid */
+            gap: 20px;
+            padding-top: 20px;
+        }
+
+        .photo-grid .photo-card {
+            padding: 10px;
+        }
+
+        .photo-grid .photo-card img,
+        .photo-grid .photo-card video { /* Apply to video too */
+            height: 180px; /* Fixed height for grid images/videos */
+            width: 100%;
+            object-fit: cover;
+        }
+
+        /* LIGHT MODE OVERRIDES for photo-specific elements */
+        body.light-mode .photo-card {
+            background: white;
+            color: black;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        body.light-mode .photo-card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode .photo-card .photo-title {
+            color: black;
+        }
+        body.light-mode .photo-card .photo-meta {
+            color: #6c757d;
+        }
+        body.light-mode .photo-card .photo-actions {
+            border-top: 1px solid #e0e0e0;
+        }
+        body.light-mode .photo-card .photo-actions .btn-action {
+            color: #555;
+        }
+        body.light-mode .photo-card .photo-actions .btn-action:hover {
+            color: #0d6efd;
+        }
+
+        .filter-view-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .filter-view-controls .dropdown-toggle {
+            background-color: #2e3032;
+            border: 1px solid #4a4d50;
+            color: #e4e6eb;
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .filter-view-controls .dropdown-toggle:hover {
+            background-color: #3a3b3c;
+            border-color: #5a5d60;
+        }
+
+        .filter-view-controls .dropdown-menu {
+            background-color: #2e3032;
+            border: 1px solid #4a4d50;
+            border-radius: 5px;
+        }
+
+        .filter-view-controls .dropdown-item {
+            color: #e4e6eb;
+            padding: 8px 15px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .filter-view-controls .dropdown-item:hover,
+        .filter-view-controls .dropdown-item.active {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        .right-panel {
+            background: #242526;
+            border-radius: 10px;
+            padding: 20px;
+            margin-left: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #e4e6eb;
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+            position: sticky;
+            top: 20px;
+        }
+
+        .right-panel h6 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .right-panel p, .right-panel ul {
+            font-size: 0.95em;
+            color: #b0b3b8;
+            margin-bottom: 8px;
+        }
+
+        .right-panel ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .right-panel ul li::before {
+            content: '• ';
+            color: #0d6efd;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        /* LIGHT MODE OVERRIDES */
+        body.light-mode {
+            background-color: #f0f2f5;
+            color: #000;
+        }
+
+        body.light-mode .post-card {
+            background: white;
+            color: black;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        body.light-mode .post-card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode .post-header strong.post-username,
+        body.light-mode .post-title-rendered h1, body.light-mode .post-title-rendered h2,
+        body.light-mode .post-title-rendered h3, body.light-mode .post-title-rendered h4,
+        body.light-mode .post-title-rendered h5, body.light-mode .post-title-rendered h6 {
+            color: black;
+        }
+        body.light-mode .post-header .text-muted.small {
+            color: #6c757d;
+        }
+        body.light-mode .comment-section {
+            border-top: 1px solid #e0e0e0;
+        }
+        body.light-mode .comment-box {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        body.light-mode .comment-box strong {
+            color: #000;
+        }
+        body.light-mode .comment-box .text-muted.small {
+            color: #6c757d;
+        }
+
+        body.light-mode .btn-toggle {
+            color: black;
+            border-color: black;
+        }
+
+        body.light-mode .btn-light-mode {
+            background-color: transparent;
+            border: 1px solid #000;
+            color: #000;
+        }
+
+        body.light-mode .vote-button-group {
+            background-color: #e0e2e5;
+            border: 1px solid #ccc;
+        }
+        body.light-mode .vote-controls .vote-btn {
+            color: #555;
+        }
+        body.light-mode .vote-controls .vote-btn:hover {
+            color: #0d6efd;
+        }
+        body.light-mode .vote-controls .sigma-score {
+            color: #000;
+        }
+
+        body.light-mode .sidebar {
+            background-color: #1a1a1a;
+        }
+        body.light-mode .sidebar .logo-container {
+            background-color: #1a1a1a;
+        }
+        body.light-mode .sidebar h2,
+        body.light-mode .sidebar a,
+        body.light-mode .sidebar .dropdown-toggle {
+            color: white !important;
+        }
+        body.light-mode .sidebar .dropdown-menu-dark {
+            background-color: #3a3b3c;
+            border-color: #4a4d50;
+        }
+        body.light-mode .sidebar .dropdown-menu-dark .dropdown-item-text {
+            color: white !important;
+            background-color: transparent !important;
+            border: none !important;
+        }
+        body.light-mode .sidebar a:hover,
+        body.light-mode .sidebar a.active {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        body.light-mode .search-bar-wrapper {
+            background-color: #e0e2e5;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode .search-bar-wrapper .search-icon {
+            color: #555;
+        }
+        body.light-mode .search-bar-wrapper .search-input {
+            color: #000;
+        }
+        body.light-mode .search-bar-wrapper .search-input::placeholder {
+            color: #888;
+        }
+        body.light-mode .search-bar-wrapper .search-tag {
+            background-color: #a0c0e0;
+            color: #000;
+        }
+        body.light-mode .search-bar-wrapper .search-tag .remove-tag {
+            color: #333;
+        }
+
+        body.light-mode .filter-view-controls .dropdown-toggle {
+            background-color: white;
+            border: 1px solid #ccc;
+            color: #000;
+        }
+        body.light-mode .filter-view-controls .dropdown-toggle:hover {
+            background-color: #f0f0f0;
+            border-color: #bbb;
+        }
+        body.light-mode .filter-view-controls .dropdown-menu {
+            background-color: white;
+            border: 1px solid #ccc;
+        }
+        body.light-mode .filter-view-controls .dropdown-item {
+            color: #000;
+        }
+        body.light-mode .filter-view-controls .dropdown-item.active {
+            background-color: #e9ecef;
+            color: black;
+        }
+        body.light-mode .filter-view-controls .dropdown-item:hover {
+            background-color: #e9ecef;
+            color: black;
+        }
+
+        /* Media queries for responsiveness */
+        @media (max-width: 991px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+            .content {
+                margin-left: 0;
+                padding-top: 10px;
+                width: 100%;
+            }
+            .sidebar .logo-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding-bottom: 10px;
+                margin-bottom: 0;
+            }
+            .sidebar img {
+                height: 100px !important;
+                background-color: transparent;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+            .sidebar a {
+                justify-content: center;
+            }
+            .sidebar .dropdown {
+                width: calc(100% - 40px);
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+            .sidebar h2 {
+                display: none;
+            }
+            .main-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .thread-post-button { /* Still using this name for button styling */
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            .toggle-group {
+                width: 100%;
+                margin-left: 0;
+                justify-content: center;
+            }
+            .search-bar-wrapper {
+                width: 100%;
+                margin-top: 0;
+            }
+            .post-card:not(.compact-view) { /* This applies to text posts, needs photo-card specific handling */
+                flex-direction: column;
+                align-items: center;
+                padding: 15px;
+            }
+            .post-card:not(.compact-view) .vote-controls {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            .post-card:not(.compact-view) .post-content-container {
+                width: 100%;
+            }
+            .post-card:not(.compact-view) .post-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            /* Photo specific responsive adjustments */
+            .photo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust grid for smaller screens */
+            }
+        }
+
+        @media (max-width: 767px) {
+            .filter-view-controls {
+                flex-direction: column;
+            }
+            .filter-view-controls .dropdown-toggle {
+                width: 100%;
+                justify-content: center;
+            }
+            .right-panel {
+                margin-left: 0;
+                margin-top: 20px;
+                position: relative;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <div class="sidebar d-flex flex-column">
+            <div class="text-center mb-3 logo-container">
+                <img src="{{ url_for('static', filename='templates/eec78dfd-22c3-4bc8-92b8-226e6a3329a4.png') }}" alt="AnonBoard Logo" style="height: 170px; margin-bottom: 1px;" class="img-fluid" />
+            </div>
+            <a href="{{ url_for('feed') }}" class="">🏠 Home</a>
+            <a href="{{ url_for('text_discussions') }}" class="">💬 Thread Discussions</a>
+            <a href="/photos" class="active">🖼️ Image Feed</a>
+            <div class="dropdown mt-4 w-100">
+                <button class="btn btn-outline-light dropdown-toggle w-100" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    👤 Profile
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="profileDropdown">
+                    <li><span class="dropdown-item-text"><strong>Username:</strong> Anon{{ '%04d' % (anon_id | int) }}</span></li>
+                    <li><span class="dropdown-item-text"><strong>Joined:</strong> {{ join_date }}</span></li>
+                    <li><span class="dropdown-item-text" id="user-sigma-score"><strong>Likes:</strong> {{ sigma_score }}</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="container-fluid">
+                <div class="main-controls">
+                    <button class="thread-post-button" onclick="window.location.href='{{ url_for('upload_form') }}'">
+                        <i class="fas fa-upload"></i> Upload New Image
+                    </button>
+                    <div class="toggle-group">
+                        <button class="btn btn-light-mode" id="themeToggle">☀️ Light Mode</button>
+                    </div>
+                </div>
+
+                <div class="search-bar-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <div class="search-input-container">
+                        <input
+                            class="search-input"
+                            type="search"
+                            placeholder="Search in Images"
+                            id="mainSearchInput"
+                            value="{{ search_query }}"
+                        />
+                    </div>
+                </div>
+
+                <div class="filter-view-controls">
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-sort"></i> Sort: {{ sort.capitalize() }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                            <li><a class="dropdown-item {% if sort == 'best' %}active{% endif %}" href="{{ url_for('photos', sort='best', view=view, q=search_query) }}" data-sort="best">Best (Most Likes)</a></li>
+                            <li><a class="dropdown-item {% if sort == 'latest' %}active{% endif %}" href="{{ url_for('photos', sort='latest', view=view, q=search_query) }}" data-sort="latest">New (Latest Uploads)</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn dropdown-toggle" type="button" id="viewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-th-large"></i> View: {{ view.capitalize() }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="viewDropdown">
+                            <li><a class="dropdown-item {% if view == 'grid' %}active{% endif %}" href="{{ url_for('photos', sort=sort, view='grid', q=search_query) }}" data-view="grid">Grid</a></li>
+                            <li><a class="dropdown-item {% if view == 'list' %}active{% endif %}" href="{{ url_for('photos', sort=sort, view='list', q=search_query) }}" data-view="list">List</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        {% if posts and posts|length > 0 %}
+                            <div class="photo-container {% if view == 'grid' %}photo-grid{% else %}photo-list{% endif %}">
+                                {% for photo in posts %}
+                                    <div class="photo-card {% if view == 'list' %}list-view{% endif %}" data-photo-id="{{ photo[0] }}" onclick="window.location.href='{{ url_for('post_detail', post_id=photo[0]) }}'">
+                                        {% if photo[3].endswith(('.mp4', '.webm', '.ogg')) %}
+                                        <video controls class="img-fluid">
+                                            <source src="{{ url_for('uploaded_file', filename=photo[3]) }}" type="video/mp4">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                        {% else %}
+                                        <img src="{{ url_for('uploaded_file', filename=photo[3]) }}" alt="{{ photo[2] or 'Anonymous Photo' }}" class="img-fluid" />
+                                        {% endif %}
+                                        <div class="photo-info">
+                                            {% if photo[2] %}
+                                                <div class="photo-title">{{ photo[2] }}</div>
+                                            {% endif %}
+                                            <div class="photo-meta">
+                                                <span>Anon{{ '%04d' % (photo[6] | int) }}</span>
+                                                <span> • {{ photo[4] }}</span>
+                                            </div>
+                                            <div class="photo-actions">
+                                                <button type="button" class="btn-action like {% if photo[7] == 'up' %}active{% endif %}" data-photo-id="{{ photo[0] }}" data-current-vote="{{ photo[7] or 'none' }}" onclick="event.stopPropagation();">
+                                                    <i class="fas fa-heart"></i> Likes (<span id="likes-{{ photo[0] }}">{{ photo[5] or 0 }}</span>)
+                                                </button>
+                                                <a href="{{ url_for('post_detail', post_id=photo[0]) }}" class="btn-action comment-link" onclick="event.stopPropagation();">
+                                                    <i class="fas fa-comment"></i> Comments ({{ photo[8] or 0 }})
+                                                </a>
+                                                {% if photo[6] == anon_id %}
+                                                    <form action="{{ url_for('delete_post', post_id=photo[0], sort=sort, view=view, q=search_query) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this photo?');" class="delete-form">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> {# ADDED: CSRF token #}
+                                                        <button type="submit" class="btn-action delete" title="Delete Photo" onclick="event.stopPropagation();">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center mt-5">No images yet. Be the first to upload one!</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="right-panel">
+                            <h6>Your Profile (Anonymous)</h6>
+                            <p>🧑 Username: anon{{ '%04d' % (anon_id | int) }}</p>
+                            <p>💪 Total Likes: <span id="user-sigma-score-right-panel">{{ sigma_score }}</span></p>
+                            <p>⏰ Joined: {{ join_date }}</p>
+                            <hr>
+                            <h6>Activity Summary:</h6>
+                            <p>📸 Images Uploaded: {{ images_uploaded }}</p>
+                            <p>💬 Comments Made: {{ comments_made }}</p>
+                            <p>❤️ Average Likes per Image: {{ average_likes }}</p>
+                            <hr>
+                            <h6>💡 Daily Insight:</h6>
+                            <p class="small fst-italic">"The greatest glory in living lies not in never falling, but in rising every time we fall." - Nelson Mandela</p>
+                            <hr>
+                            <h6>Tips:</h6>
+                            <ul>
+                                <li>Upload high-quality images.</li>
+                                <li>Add a descriptive title.</li>
+                                <li>Engage with other posts!</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Theme Toggle JavaScript
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('light-mode');
+            const isLightMode = document.body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+            this.innerHTML = isLightMode ? '🌙 Dark Mode' : '☀️ Light Mode';
+        });
+
+        // Apply saved theme on load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('light-mode');
+                document.getElementById('themeToggle').innerHTML = '🌙 Dark Mode';
+            }
+
+            // Client-side markdown rendering for titles and bodies
+            document.querySelectorAll('.photo-title-rendered, .photo-description-rendered, .comment-content-rendered').forEach(element => {
+                const markdownContent = element.getAttribute('data-markdown-content');
+                if (markdownContent) {
+                    let htmlContent = markdownContent
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'); // Links
+                    element.innerHTML = htmlContent;
+                }
+            });
+
+            // Handle photo liking - NOW WITH BACKEND INTEGRATION
+            document.querySelectorAll('.btn-action.like').forEach(button => {
+                button.addEventListener('click', function() {
+                    event.stopPropagation(); // Prevent card click event from firing
+
+                    const photoId = this.dataset.photoId;
+                    const currentLikesSpan = document.getElementById(`likes-${photoId}`);
+                    let currentVoteStatus = this.dataset.currentVote; // 'up', 'down', or 'none'
+                    let voteTypeToSend = 'up'; // Default to upvote
+
+                    // Determine the vote action based on current status
+                    if (currentVoteStatus === 'up') {
+                        // If currently upvoted, clicking again means un-upvote (which is like a downvote in effect if we consider sigma points, or just removal of vote)
+                        // For a "like" button, clicking an active "like" usually means unlike/remove vote.
+                        voteTypeToSend = 'none'; // Will tell backend to remove the vote if it exists
+                    } else {
+                        // If not upvoted (or downvoted), clicking means upvote
+                        voteTypeToSend = 'up';
+                    }
+
+                    // Send AJAX request to the server
+                    fetch('/vote', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // 'X-CSRFToken': 'YOUR_CSRF_TOKEN_HERE', // CSRF token might be needed if not exempted
+                        },
+                        body: JSON.stringify({
+                            item_type: 'post',
+                            post_id: parseInt(photoId),
+                            vote_type: voteTypeToSend === 'none' ? (currentVoteStatus === 'up' ? 'down' : 'up') : voteTypeToSend // Send 'up' or 'down' based on desired state
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update UI based on server response
+                            currentLikesSpan.textContent = data.new_score;
+                            this.dataset.currentVote = data.user_vote_status; // Update data attribute for next click
+
+                            if (data.user_vote_status === 'up') {
+                                this.classList.add('active');
+                            } else {
+                                this.classList.remove('active');
+                            }
+                        } else {
+                            alert('Error updating like: ' + data.message);
+                            console.error('Vote failed:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error during fetch:', error);
+                        alert('An error occurred while trying to like the post.');
+                    });
+                });
+            });
+
+
+            // Search functionality - redirect on Enter
+            const mainSearchInput = document.getElementById('mainSearchInput');
+            mainSearchInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    const searchQuery = this.value;
+                    const currentSort = new URLSearchParams(window.location.search).get('sort') || 'latest';
+                    const currentView = new URLSearchParams(window.location.search).get('view') || 'grid';
+                    window.location.href = `{{ url_for('photos', q=searchQuery, sort=currentSort, view=currentView) }}`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

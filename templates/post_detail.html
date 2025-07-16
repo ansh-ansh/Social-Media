@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AnonBoard | Post Detail</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #18191a; /* Dark mode background */
+            color: #e4e6eb; /* Dark mode text color */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background-color: #242526; /* Default dark background for sidebar */
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        /* Style for the logo container to ensure consistent background */
+        .sidebar .logo-container {
+            background-color: #242526; /* Match sidebar background in dark mode */
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+        }
+
+        .sidebar h2 {
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            text-decoration: none;
+            color: #b0b3b8;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar a.active,
+        .sidebar a:hover {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+            flex-grow: 1;
+            width: calc(100% - 250px);
+            box-sizing: border-box;
+        }
+
+        /* Theme Toggle Button Styling */
+        .btn-toggle {
+            background-color: transparent;
+            border: 1px solid #e4e6eb;
+            color: #e4e6eb;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .dropdown-menu-dark {
+            background-color: #3a3b3c;
+            color: white;
+            border: 1px solid #4a4d50;
+        }
+
+        .dropdown-item-text {
+            padding: 8px 20px;
+            color: #e4e6eb;
+            background-color: transparent;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .btn-light-mode {
+            background-color: transparent;
+            border: 1px solid #e4e6eb;
+            color: #e4e6eb;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Post Card Styling (for the main post and comments) */
+        .post-card, .comment-card {
+            display: flex;
+            align-items: flex-start;
+            background: #242526; /* Dark mode background */
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #e4e6eb; /* Dark mode text */
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Vote buttons */
+        .vote-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 15px;
+            flex-shrink: 0; /* Prevent shrinking in flex container */
+            min-width: 40px; /* Ensure enough space for arrows and score */
+        }
+        .vote-controls .vote-btn {
+            background: none;
+            border: none;
+            color: #b0b3b8; /* Default icon color */
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            padding: 2px 5px;
+        }
+        .vote-controls .vote-btn:hover {
+            color: white; /* Hover color in dark mode */
+        }
+        .vote-controls .vote-btn.upvote.active {
+            color: #FF4500; /* Reddit Orange for active upvote */
+        }
+        .vote-controls .vote-btn.downvote.active {
+            color: #7193FF; /* Reddit Blue for active downvote */
+        }
+        .vote-controls .sigma-score {
+            font-weight: bold;
+            color: #e4e6eb; /* Score color in dark mode */
+            font-size: 1.1em;
+            min-width: 25px;
+            text-align: center;
+        }
+
+        .post-content-container, .comment-content-container {
+            flex-grow: 1;
+        }
+
+        /* Post-specific styles */
+        .post-username { /* Smaller text for username */
+            font-size: 0.9em;
+            color: #b0b3b8; /* Muted color for dark mode */
+            margin-bottom: 5px;
+        }
+        .post-title { /* Big and bold title */
+            font-size: 1.8em; /* Significantly larger */
+            font-weight: bold;
+            color: white; /* Prominent color */
+            margin-bottom: 10px;
+        }
+        .post-body-text { /* Regular, slightly smaller text for body */
+            font-size: 1em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #e4e6eb;
+        }
+        .post-timestamp { /* Smallest text for timestamp */
+            font-size: 0.85em;
+            color: #b0b3b8; /* Muted color for dark mode */
+            margin-top: 5px;
+        }
+
+
+        /* Comment-specific styles */
+        .comment-card {
+            margin-left: 30px; /* Indent comments slightly */
+            border-left: 3px solid #3a3b3c;
+            padding-left: 15px;
+        }
+        .comment-username { /* Smaller text for comment username */
+            font-size: 0.9em;
+            color: #b0b3b8; /* Muted color for dark mode */
+            margin-bottom: 5px;
+        }
+        .comment-body-text { /* Regular text for comment body */
+            font-size: 0.95em;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            color: #e4e6eb;
+        }
+        .comment-timestamp { /* Smallest text for comment timestamp */
+            font-size: 0.8em;
+            color: #b0b3b8; /* Muted color for dark mode */
+            margin-top: 5px;
+        }
+        .comment-actions {
+            margin-top: 10px;
+            text-align: right; /* Align delete button to the right */
+        }
+        .comment-actions .btn-sm {
+            padding: .25rem .5rem;
+            font-size: .75rem;
+            line-height: 1.5;
+            border-radius: .2rem;
+        }
+
+        .comment-form-container {
+            background: #242526;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .comment-form-container textarea.form-control {
+            background-color: #3a3b3c;
+            border: 1px solid #4a4d50;
+            color: #e4e6eb;
+        }
+        .comment-form-container textarea.form-control::placeholder {
+            color: #b0b3b8;
+        }
+        .comment-form-container textarea.form-control:focus {
+            background-color: #3a3b3c;
+            border-color: #0d6efd; /* Bootstrap primary color for focus */
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            color: #e4e6eb;
+        }
+
+        /* Make text-muted visible in dark mode */
+        body:not(.light-mode) .text-muted {
+            color: #b0b3b8 !important; /* A lighter gray for dark mode */
+        }
+
+        /* LIGHT MODE OVERRIDES */
+        body.light-mode {
+            background-color: #f0f2f5;
+            color: #000;
+        }
+
+        /* Sidebar always dark with white text, even in light mode */
+        body.light-mode .sidebar {
+            background-color: #1a1a1a;
+        }
+        body.light-mode .sidebar .logo-container {
+            background-color: #1a1a1a; /* Match the sidebar's light-mode dark background */
+        }
+        body.light-mode .sidebar h2,
+        body.light-mode .sidebar a,
+        body.light-mode .sidebar .dropdown-toggle {
+            color: white !important;
+        }
+        body.light-mode .sidebar .dropdown-menu-dark {
+            background-color: #3a3b3c;
+            border-color: #4a4d50;
+        }
+        body.light-mode .sidebar .dropdown-menu-dark .dropdown-item-text {
+            color: white !important;
+            background-color: transparent !important;
+            border: none !important;
+        }
+        body.light-mode .sidebar a:hover,
+        body.light-mode .sidebar a.active {
+            background-color: #3a3b3c;
+            color: white;
+        }
+
+        /* Light mode for content area elements */
+        body.light-mode .btn-light-mode {
+            border: 1px solid #000;
+            color: #000;
+        }
+        body.light-mode .post-card, body.light-mode .comment-card, body.light-mode .comment-form-container {
+            background: white;
+            color: black;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        body.light-mode .post-username,
+        body.light-mode .post-timestamp {
+            color: #6c757d; /* Muted gray for light mode */
+        }
+        body.light-mode .post-title {
+            color: black; /* Title color in light mode */
+        }
+        body.light-mode .post-body-text {
+            color: #212529; /* Darker text for readability in light mode */
+        }
+        body.light-mode .vote-controls .vote-btn {
+            color: #555; /* Default icon color in light mode */
+        }
+        body.light-mode .vote-controls .vote-btn:hover {
+            color: #000; /* Hover color in light mode */
+        }
+        body.light-mode .vote-controls .sigma-score {
+            color: #333; /* Score color in light mode */
+        }
+        body.light-mode .comment-card {
+            border-left-color: #ccc; /* Lighter border for comments in light mode */
+        }
+        body.light-mode .comment-username,
+        body.light-mode .comment-timestamp {
+            color: #6c757d; /* Muted gray for light mode */
+        }
+        body.light-mode .comment-body-text {
+            color: #212529; /* Darker text for readability in light mode */
+        }
+        body.light-mode .comment-form-container textarea.form-control {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #212529;
+        }
+        body.light-mode .comment-form-container textarea.form-control::placeholder {
+            color: #6c757d;
+        }
+        body.light-mode .comment-form-container textarea.form-control:focus {
+            background-color: #fff;
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            color: #212529;
+        }
+
+        /* Media queries for responsiveness */
+        @media (max-width: 991px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+            .content {
+                margin-left: 0;
+                padding-top: 10px;
+                width: 100%;
+            }
+            .sidebar .logo-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding-bottom: 10px;
+                margin-bottom: 0;
+            }
+            .sidebar img {
+                height: 100px !important;
+                background-color: transparent;
+                border-radius: 50%; /* Only if your image should be circular */
+                object-fit: cover;
+            }
+            .sidebar a {
+                justify-content: center;
+            }
+            .sidebar .dropdown {
+                width: calc(100% - 40px);
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+            .sidebar h2 {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <div class="sidebar">
+            <div class="logo-container text-center">
+                <img src="{{ url_for('static', filename='templates/eec78dfd-22c3-4bc8-92b8-226e6a3329a4.png') }}" alt="AnonBoard Logo" style="height: 170px; margin-bottom: 1px;" class="img-fluid" />
+            </div>
+
+            <a href="{{ url_for('feed') }}" class="">🏠 Home</a>
+            <a href="{{ url_for('text_discussions') }}">💬 Thread Discussions</a>
+            <a href="/photos">🖼️ Image Feed</a>
+            <div class="dropdown mt-4">
+                <button class="btn btn-outline-light dropdown-toggle w-100" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    👤 Profile
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="profileDropdown">
+                    <li><span class="dropdown-item-text"><strong>Username:</strong> Anon{{ '%04d' % (anon_id | int) }}</span></li>
+                    <li><span class="dropdown-item-text"><strong>Joined:</strong> {{ join_date }}</span></li>
+                    {# ADDED ID TO SIGMA SCORE SPAN FOR EASIER ACCESS #}
+                    <li><span class="dropdown-item-text"><strong>Sigma score: </strong> <span id="user-sigma-score">{{ sigma_score }}</span></span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="d-flex justify-content-end mb-3">
+                <button class="btn btn-light-mode" id="themeToggle">☀️ Light Mode</button>
+            </div>
+
+            {# Flash Messages #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-3">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {# AJAX Messages will be inserted here #}
+            <div id="ajax-messages" class="mb-3"></div>
+
+            {% if post %}
+                <div class="post-card">
+                    <div class="vote-controls">
+                        <button type="button" class="vote-btn upvote {% if post[7] == 'up' %}active{% endif %}"
+                                data-post-id="{{ post[0] }}" data-vote-type="up">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <span class="sigma-score" id="post-sigma-{{ post[0] }}">{{ post[5] or 0 }}</span>
+                        <button type="button" class="vote-btn downvote {% if post[7] == 'down' %}active{% endif %}"
+                                data-post-id="{{ post[0] }}" data-vote-type="down">
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                    </div>
+                    <div class="post-content-container">
+                        {# Display username, title, body, timestamp #}
+                        <p class="post-username">Anon{{ '%04d' % (post[6] | int) }}</p>
+                        <h2 class="post-title">{{ post[8] }}</h2>
+                        <p class="post-content">{{ post[2] }}</p>
+                        <small class="post-timestamp">Posted {{ post[4] | format_time_ago }}</small>
+
+                        {# Image/Video Display #}
+                        {% if post[3] %}
+                            {% set video_extensions = ['mp4', 'webm', 'ogg'] %}
+                            {% set file_extension = post[3].rsplit('.', 1)[1].lower() if '.' in post[3] else '' %}
+
+                            {% if file_extension in video_extensions %}
+                                <video controls class="img-fluid rounded my-3" alt="Post Video">
+                                    <source src="{{ url_for('static', filename='uploads/' ~ post[3]) }}" type="video/{{ file_extension }}">
+                                    Your browser does not support the video tag.
+                                </video>
+                            {% else %}
+                                <img src="{{ url_for('static', filename='uploads/' ~ post[3]) }}" class="img-fluid rounded my-3" alt="Post Image" />
+                            {% endif %}
+                        {% endif %}
+
+                        <div class="post-actions d-flex align-items-center mt-2 justify-content-end">
+                            {% if anon_id == post[6] %}
+                                <form action="{{ url_for('delete_post', post_id=post[0]) }}" method="POST"
+                                    style="display:inline;"
+                                    onsubmit="return confirm('Are you sure you want to delete this post? This will also delete all comments.');">
+                                    {{ delete_post_form.csrf_token }}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Post">
+                                        <i class="fas fa-trash-alt"></i> Delete Post
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comment-form-container">
+                    <h5>Leave a Comment</h5>
+                    <form method="POST" action="{{ url_for('add_generic_comment', post_id=post[0]) }}">
+                        {{ comment_form.csrf_token }}
+                        <div class="mb-3">
+                            {{ comment_form.comment_content(class_="form-control", rows="3", placeholder="Write your comment here...", required=true) }}
+                            {% if comment_form.comment_content.errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in comment_form.comment_content.errors %}
+                                        {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {{ comment_form.submit(class_="btn btn-primary") }}
+                    </form>
+                </div>
+
+                <h5>Comments ({{ comments|length }})</h5>
+                {% if comments and comments|length > 0 %}
+                    {% for comment in comments %}
+                        <div class="comment-card">
+                            <div class="vote-controls">
+                                <button type="button" class="vote-btn upvote {% if comment[4] == 'up' %}active{% endif %}"
+                                        data-comment-id="{{ comment[0] }}" data-vote-type="up">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <span class="sigma-score" id="comment-sigma-{{ comment[0] }}">{{ comment[3] or 0 }}</span>
+                                <button type="button" class="vote-btn downvote {% if comment[4] == 'down' %}active{% endif %}"
+                                        data-comment-id="{{ comment[0] }}" data-vote-type="down">
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                            </div>
+                            <div class="comment-content-container">
+                                <p class="comment-username">Anon{{ '%04d' % (comment[1] | int) }}</p>
+                                <p class="comment-body-text">{{ comment[2] }}</p>
+                                <small class="comment-timestamp">Commented {{ comment[5] | format_time_ago }}</small>
+                                <div class="comment-actions">
+                                    {% if anon_id == comment[1] %}
+                                        <form action="{{ url_for('delete_comment', comment_id=comment[0]) }}"
+                                            method="POST" style="display:inline;"
+                                            onsubmit="return confirm('Are you sure you want to delete this comment?');">
+                                            {{ delete_comment_form.csrf_token }}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                title="Delete Comment">
+                                                <i class="fas fa-trash-alt"></i> Delete
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mt-3">No comments yet. Be the first to reply!</p>
+                {% endif %}
+
+            {% else %}
+                <p class="text-muted text-center mt-5">Post not found.</p>
+            {% endif %}
+
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.0/marked.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+            <script type="text/javascript">
+                // Set marked.js options globally
+                marked.setOptions({
+                    breaks: true, // Render GFM line breaks (single newline means a <br>)
+                    gfm: true,    // Enable GitHub Flavored Markdown
+                    sanitize: true // Sanitize the HTML output
+                });
+
+                var socket = io(); // Connects to the SocketIO server, do this only once
+
+                socket.on('connect', function() {
+                    console.log('Connected to WebSocket server!');
+                });
+
+                socket.on('disconnect', function() {
+                    console.log('Disconnected from WebSocket server.');
+                });
+
+                // Listen for the 'update_sigma' event (for user's profile sigma)
+                socket.on('update_sigma', function(data) {
+                    console.log('Received update_sigma event:', data);
+                    // Parse the currentAnonId to an integer for correct comparison
+                    const currentAnonId = parseInt("{{ anon_id }}");
+
+                    // Only update if the event is for the current user's profile
+                    if (data.anon_id === currentAnonId) {
+                        const sigmaScoreElement = document.getElementById('user-sigma-score');
+                        if (sigmaScoreElement) {
+                            sigmaScoreElement.textContent = data.new_sigma;
+                            console.log(`Updated user sigma score to: ${data.new_sigma}`);
+                        }
+                    }
+                });
+
+                // Listen for the 'update_post_sigma' event (for individual post scores)
+                socket.on('update_post_sigma', function(data) {
+                    console.log('Received update_post_sigma event:', data);
+                    const sigmaSpan = document.getElementById(`post-sigma-${data.post_id}`);
+                    if (sigmaSpan) {
+                        sigmaSpan.textContent = data.new_sigma;
+                        console.log(`Updated post ${data.post_id} sigma score to: ${data.new_sigma}`);
+                    }
+                });
+
+                // Listen for the 'update_comment_sigma' event (for individual comment scores)
+                socket.on('update_comment_sigma', function(data) {
+                    console.log('Received update_comment_sigma event:', data);
+                    const sigmaSpan = document.getElementById(`comment-sigma-${data.comment_id}`);
+                    if (sigmaSpan) {
+                        sigmaSpan.textContent = data.new_sigma;
+                        console.log(`Updated comment ${data.comment_id} sigma score to: ${data.new_sigma}`);
+                    }
+                });
+
+                // All DOM-related JavaScript inside DOMContentLoaded
+                document.addEventListener('DOMContentLoaded', function() {
+                    const themeToggleBtn = document.getElementById("themeToggle");
+                    const ajaxMessagesDiv = document.getElementById('ajax-messages');
+
+                    function applyTheme(isLightMode) {
+                        if (isLightMode) {
+                            document.body.classList.add("light-mode");
+                            themeToggleBtn.innerHTML = '&#127769; Dark Mode'; // Moon icon
+                        } else {
+                            document.body.classList.remove("light-mode");
+                            themeToggleBtn.innerHTML = '&#127774; Light Mode'; // Sun icon
+                        }
+                    }
+
+                    // Function to display AJAX messages
+                    function displayAjaxMessage(message, type) {
+                        const alertHtml = `
+                            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                                ${message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        ajaxMessagesDiv.innerHTML = alertHtml;
+                        // Automatically dismiss after 5 seconds
+                        setTimeout(() => {
+                            const alertElement = ajaxMessagesDiv.querySelector('.alert');
+                            if (alertElement) {
+                                const bsAlert = bootstrap.Alert.getInstance(alertElement) || new bootstrap.Alert(alertElement);
+                                bsAlert.close();
+                            }
+                        }, 5000);
+                    }
+
+                    // Apply saved theme on load
+                    const savedTheme = localStorage.getItem("theme");
+                    if (savedTheme === "light") {
+                        applyTheme(true);
+                    } else {
+                        applyTheme(false);
+                    }
+
+                    // Toggle theme on button click
+                    themeToggleBtn.addEventListener("click", () => {
+                        const isLight = document.body.classList.contains("light-mode");
+                        applyTheme(!isLight);
+                        localStorage.setItem("theme", isLight ? "dark" : "light");
+                    });
+
+                    // --- Search Bar JavaScript (if needed on this page, otherwise remove) ---
+                    const mainSearchInput = document.getElementById('mainSearchInput');
+                    const searchInputContainer = document.querySelector('.search-input-container');
+
+                    function updateAndGoToUrl() {
+                        const currentUrl = new URL(window.location.href);
+                        const params = new URLSearchParams(currentUrl.search);
+
+                        const searchValue = mainSearchInput.value.trim();
+
+                        if (searchValue) {
+                            params.set('q', searchValue);
+                        } else {
+                            params.delete('q');
+                        }
+
+                        const currentSort = params.get('sort') || 'best';
+                        const currentView = params.get('view') || 'card';
+
+                        params.set('sort', currentSort);
+                        params.set('view', currentView);
+
+                        currentUrl.search = params.toString();
+                        window.location.href = currentUrl.toString();
+                    }
+
+                    if (mainSearchInput) { // Check if element exists before adding listener
+                        mainSearchInput.addEventListener('keypress', function(event) {
+                            if (event.key === 'Enter') {
+                                event.preventDefault();
+                                updateAndGoToUrl();
+                            }
+                        });
+                    }
+
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const searchQuery = urlParams.get('q');
+
+                    if (searchQuery && searchInputContainer && mainSearchInput) { // Check if elements exist
+                        const searchTag = document.createElement('span');
+                        searchTag.classList.add('search-tag');
+                        searchTag.innerHTML = `
+                            <img src="https://img.icons8.com/color/16/000000/reddit--v1.png" alt="AnonBoard Icon" style="height: 16px; width: 16px;">
+                            ${searchQuery}
+                            <i class="fas fa-times remove-tag" style="margin-left: 5px;"></i>
+                        `;
+                        searchInputContainer.prepend(searchTag);
+                        mainSearchInput.value = '';
+                        mainSearchInput.placeholder = '';
+                        mainSearchInput.style.width = 'fit-content';
+                        mainSearchInput.style.flexGrow = '0';
+
+                        const removeTagButton = searchTag.querySelector('.remove-tag');
+                        if (removeTagButton) {
+                            removeTagButton.addEventListener('click', () => {
+                                searchTag.remove();
+                                mainSearchInput.value = '';
+                                mainSearchInput.placeholder = 'Search in Threads';
+                                mainSearchInput.style.width = '';
+                                mainSearchInput.style.flexGrow = '1';
+                                updateAndGoToUrl();
+                            });
+                        }
+                    } else if (mainSearchInput) {
+                        mainSearchInput.placeholder = 'Search in Threads';
+                    }
+
+                    // --- Filter/View Dropdowns JavaScript (if needed on this page, otherwise remove) ---
+                    const sortDropdownItems = document.querySelectorAll('#sortDropdown + .dropdown-menu .dropdown-item');
+                    const viewDropdownItems = document.querySelectorAll('#viewDropdown + .dropdown-menu .dropdown-item');
+
+                    sortDropdownItems.forEach(item => {
+                        item.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            const newSort = this.dataset.sort;
+                            const currentUrl = new URL(window.location.href);
+                            currentUrl.searchParams.set('sort', newSort);
+                            const currentQ = urlParams.get('q');
+                            if (currentQ) {
+                                currentUrl.searchParams.set('q', currentQ);
+                            } else {
+                                currentUrl.searchParams.delete('q');
+                            }
+                            const currentView = urlParams.get('view');
+                            if (currentView) {
+                                currentUrl.searchParams.set('view', currentView);
+                            } else {
+                                currentUrl.searchParams.delete('view');
+                            }
+                            window.location.href = currentUrl.toString();
+                        });
+                    });
+
+                    viewDropdownItems.forEach(item => {
+                        item.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            const newView = this.dataset.view;
+                            const currentUrl = new URL(window.location.href);
+                            currentUrl.searchParams.set('view', newView);
+                            const currentQ = urlParams.get('q');
+                            if (currentQ) {
+                                currentUrl.searchParams.set('q', currentQ);
+                            } else {
+                                currentUrl.searchParams.delete('q');
+                            }
+                            const currentSort = urlParams.get('sort');
+                            if (currentSort) {
+                                currentUrl.searchParams.set('sort', currentSort);
+                            } else {
+                                currentUrl.searchParams.delete('sort');
+                            }
+                            window.location.href = currentUrl.toString();
+                        });
+                    });
+
+
+                    // Markdown Rendering Logic (for post content and comments)
+                    document.querySelectorAll('.post-title').forEach(element => {
+                        element.innerHTML = marked.parse(element.textContent);
+                    });
+                    document.querySelectorAll('.post-body-text').forEach(element => {
+                        element.innerHTML = marked.parse(element.textContent);
+                    });
+
+                    // Markdown Rendering for comments
+                    document.querySelectorAll('.comment-body-text').forEach(element => {
+                        const markdownContent = element.textContent || element.innerText; // Get text content
+                        if (markdownContent) {
+                            element.innerHTML = marked.parse(markdownContent);
+                        }
+                    });
+
+
+                    // --- JavaScript for AJAX Voting (Post AND Comment) ---
+                    document.querySelectorAll('.vote-btn').forEach(button => {
+                        button.addEventListener('click', function(event) {
+                            event.preventDefault();
+
+                            const postId = this.dataset.postId;
+                            const commentId = this.dataset.commentId;
+                            const voteType = this.dataset.voteType; // 'up' or 'down'
+                            let itemType, itemId, targetSigmaSpanId;
+
+                            if (postId) {
+                                itemType = 'post';
+                                itemId = postId;
+                                targetSigmaSpanId = `post-sigma-${postId}`;
+                            } else if (commentId) {
+                                itemType = 'comment';
+                                itemId = commentId;
+                                targetSigmaSpanId = `comment-sigma-${commentId}`;
+                            } else {
+                                console.error('Missing item ID on the vote button:', this);
+                                displayAjaxMessage('Error: Could not determine item to vote on.', 'danger');
+                                return;
+                            }
+
+                            if (!itemId || !itemType || !voteType) {
+                                console.error('Invalid vote data:', { itemId, itemType, voteType });
+                                displayAjaxMessage('Error: Invalid vote data.', 'danger');
+                                return;
+                            }
+
+                            fetch('/vote', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ item_type: itemType, [itemType + '_id']: parseInt(itemId), vote_type: voteType })
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    return response.json().then(err => { throw new Error(err.message || 'Server error'); });
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.success) {
+                                    const currentUpvoteBtn = document.querySelector(`.vote-btn.upvote[data-${itemType}-id="${itemId}"]`);
+                                    const currentDownvoteBtn = document.querySelector(`.vote-btn.downvote[data-${itemType}-id="${itemId}"]`);
+                                    const sigmaSpan = document.getElementById(targetSigmaSpanId);
+
+                                    if (sigmaSpan) {
+                                        sigmaSpan.textContent = data.new_score;
+                                    }
+
+                                    // Remove 'active' class from both buttons first
+                                    if (currentUpvoteBtn) currentUpvoteBtn.classList.remove('active');
+                                    if (currentDownvoteBtn) currentDownvoteBtn.classList.remove('active');
+
+                                    // Add 'active' class to the currently active vote button
+                                    if (data.user_vote_status === 'up') {
+                                        if (currentUpvoteBtn) currentUpvoteBtn.classList.add('active');
+                                    } else if (data.user_vote_status === 'down') {
+                                        if (currentDownvoteBtn) currentDownvoteBtn.classList.add('active');
+                                    }
+                                    // No success message needed, as updates are visual and real-time via sockets
+                                } else {
+                                    console.error('Voting failed (server reported failure):', data.message);
+                                    displayAjaxMessage('Could not cast vote: ' + data.message, 'warning');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Fetch error during vote:', error);
+                                displayAjaxMessage('An error occurred while voting: ' + error.message || 'Unknown error', 'danger');
+                            });
+                        });
+                    });
+
+                    // Handle delete forms for comments without interfering with card clicks
+                    document.querySelectorAll('.comment-actions form').forEach(form => {
+                        form.addEventListener('click', function(event) {
+                            event.stopPropagation(); // Prevent click from bubbling up to parent if there was a card click listener
+                        });
+                    });
+                });
+            </script>
+</body>
+</html>
